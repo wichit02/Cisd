@@ -1,0 +1,23 @@
+{
+  "app": "AO Signal Studio (M5)",
+  "monitoredSymbols": [
+    "US100"
+  ],
+  "direction": "both",
+  "totalCapturedSignals": 1,
+  "latestSignalAt": "19/11/2569 22:55:48",
+  "events": [
+    {
+      "id": "sim-M15-US100-1795103748414",
+      "timestamp": "19/11/2569 22:55:48",
+      "symbol": "US100",
+      "signal": "BUY",
+      "aoPrev": 0,
+      "aoCurr": 0,
+      "price": 27798.73,
+      "deliveredToTelegram": false,
+      "deliveredToNtfy": false,
+      "deliveredWebPushCount": 0
+    }
+  ]
+}

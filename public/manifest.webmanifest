@@ -1,0 +1,31 @@
+{
+  "id": "/",
+  "name": "AO Signal Studio",
+  "short_name": "AO Signal",
+  "description": "ระบบเฝ้ากราฟ AO M5 อัตโนมัติ แจ้งเตือนเข้ามือถือทันทีโดยไม่ต้องเปิดกราฟ",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#ffffff",
+  "background_color": "#f8fafc",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
