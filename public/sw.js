@@ -8,9 +8,9 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('push', (event) => {
   let payload = {
-    title: 'CISD Signal Alert',
-    body: 'ตรวจพบสัญญาณ CISD (M30 · M15)',
-    tag: 'cisd-signal',
+    title: 'Cisd เตือน',
+    body: 'ตรวจพบสัญญาณ US100 M15',
+    tag: 'cisd-m15-signal',
     url: '/',
   };
 
@@ -28,7 +28,7 @@ self.addEventListener('push', (event) => {
       body: payload.body,
       icon: '/pwa-192x192.png',
       badge: '/pwa-192x192.png',
-      tag: payload.tag || 'ao-m5-signal',
+      tag: payload.tag || 'cisd-m15-signal',
       renotify: true,
       requireInteraction: true,
       vibrate: [450, 150, 450, 150, 450, 150, 450, 150, 450],

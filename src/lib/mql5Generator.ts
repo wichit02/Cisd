@@ -73,7 +73,7 @@ export function generateMql5Code(config: Mql5Config): string {
 //|                    Awesome Oscillator Zero-Line Cross Notifier   |
 //|                  M5 Push Notification for MetaTrader 5 Android   |
 //+------------------------------------------------------------------+
-#property copyright "AO Signal Studio"
+#property copyright "Cisd เตือน"
 #property version   "1.10"
 #property indicator_separate_window
 #property indicator_buffers 2
@@ -301,7 +301,7 @@ int OnCalculate(const int rates_total,
 //|                Multi-Symbol AO Zero-Line Cross Push Notifier EA  |
 //|                  M5 Push Notification for MetaTrader 5 Android   |
 //+------------------------------------------------------------------+
-#property copyright "AO Signal Studio"
+#property copyright "Cisd เตือน"
 #property version   "1.10"
 #property strict
 

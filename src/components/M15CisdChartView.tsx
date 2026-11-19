@@ -51,6 +51,8 @@ import {
   showLocalMobileNotification,
   subscribeDeviceToWebPush,
 } from '../lib/webPushClient';
+import cisdLogoImg from '../assets/images/cisd_brand_logo_1795106433027.jpg';
+import cisdBannerImg from '../assets/images/cisd_alert_banner_1795106433758.jpg';
 
 interface M15CisdChartViewProps {
   customPrefix: string;
@@ -1053,6 +1055,48 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
 
   return (
     <section className="space-y-6">
+      {/* Compact Visual Brand Card: New Cisd เตือน Logo & M15 Breakout Artwork */}
+      <div className="relative overflow-hidden rounded-2xl border border-slate-800/80 bg-[#090d16] text-white shadow-sm">
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-full sm:w-3/5 opacity-75">
+          <img
+            src={cisdBannerImg}
+            alt="Cisd เตือน กราฟ US100 M15 Real-Time"
+            referrerPolicy="no-referrer"
+            className="h-full w-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#090d16] via-[#090d16]/85 to-transparent" />
+        </div>
+        <div className="relative z-10 flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4">
+          <div className="flex items-center gap-3.5">
+            <img
+              src={cisdLogoImg}
+              alt="โลโก้ Cisd เตือน"
+              referrerPolicy="no-referrer"
+              className="h-12 w-12 shrink-0 rounded-xl object-cover ring-1 ring-amber-400/35 shadow-md"
+            />
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-bold tracking-tight text-white sm:text-lg">
+                  Cisd เตือน
+                </h2>
+                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-300 ring-1 ring-emerald-400/25">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  M15 LIVE
+                </span>
+              </div>
+              <p className="mt-0.5 text-xs text-slate-300">
+                สแกนโครงสร้าง US100 M15 ทุก 2 วินาที · ส่งแจ้งเตือน Telegram (8217822307) & มือถือ
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-amber-200/90 font-mono tabular-nums">
+            <span className="rounded-lg bg-slate-900/80 px-2.5 py-1.5 ring-1 ring-white/10">
+              US100Cash# · {activeTimeframe}
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Control Toolbar (M15 Only) */}
       <div className="flex flex-col gap-3.5 rounded-xl border border-slate-200/90 bg-white p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-3.5">

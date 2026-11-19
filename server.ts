@@ -497,7 +497,7 @@ function sanitizeGithubRepoName(raw: string): string {
 
 function buildSignalsSnapshotJson(): Buffer {
   const payload = {
-    app: 'AO Signal Studio (M5)',
+    app: 'Cisd เตือน (M15)',
     monitoredSymbols: persisted.symbols,
     direction: persisted.direction,
     totalCapturedSignals: persisted.events.length,
@@ -570,7 +570,7 @@ async function githubApiRequest<T = any>(
       Accept: 'application/vnd.github+json',
       Authorization: `Bearer ${token}`,
       'X-GitHub-Api-Version': '2022-11-28',
-      'User-Agent': 'AO-Signal-Studio',
+      'User-Agent': 'Cisd-Alert-App',
       ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
@@ -649,7 +649,7 @@ async function ensureGithubRepoAndBranch(params: {
         private: isPrivate,
         auto_init: true,
         description:
-          'AO Signal Studio — Real-Time Awesome Oscillator M5 Monitor & Alert System',
+          'Cisd เตือน — Real-Time US100 M15 CISD Monitor & Alert System',
       }
     );
     if (!createRes.ok) {
@@ -693,7 +693,7 @@ async function ensureGithubRepoAndBranch(params: {
 
   // Repo is completely empty (404/409 on git/refs) -> bootstrap README via Contents API
   const initContent = Buffer.from(
-    '# AO Signal Studio\n\nInitializing real-time workspace sync...\n',
+    '# Cisd เตือน\n\nInitializing real-time US100 M15 workspace sync...\n',
     'utf-8'
   ).toString('base64');
   const seedRes = await githubApiRequest<{ commit?: { sha?: string } }>(
@@ -3033,7 +3033,7 @@ function generateXmLiveBridgeEaCode(ingestUrl: string): string {
 // 3. นำไฟล์นี้ไปวางใน MQL5\\Experts แล้วลากใส่กราฟ US100Cash# (TF ใดก็ได้)
 // 4. ระบบจะส่งแท่งเทียน M15 และราคา Bid/Ask จาก XM เข้าเว็บทุกๆ 2 วินาที
 //+------------------------------------------------------------------+
-#property copyright "CISD Signal Studio"
+#property copyright "Cisd เตือน"
 #property version   "1.00"
 #property strict
 

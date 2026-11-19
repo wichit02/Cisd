@@ -26,6 +26,7 @@ import {
   SYSTEM_TELEGRAM_CHAT_ID,
 } from './lib/telegramStorage';
 import { loadSavedGithubConfig } from './lib/githubStorage';
+import cisdLogoImg from './assets/images/cisd_brand_logo_1795106433027.jpg';
 
 type ActiveSection =
   | 'm15'
@@ -236,16 +237,22 @@ export default function App() {
       {!isWebMode && (
         <header className="border-b border-slate-200/80 bg-white">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 lg:gap-6 px-4 py-3.5 sm:px-6 lg:px-8">
-            {/* Zone 1: Brand wordmark only */}
+            {/* Zone 1: New Brand Logo & Cisd เตือน wordmark */}
             <a
               href="#top"
               onClick={(e) => {
                 e.preventDefault();
                 setActiveSection('m15');
               }}
-              className="text-base font-bold tracking-tight text-slate-900 whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-2.5 text-base font-bold tracking-tight text-slate-900 whitespace-nowrap shrink-0"
             >
-              CISD Signal Studio
+              <img
+                src={cisdLogoImg}
+                alt="โลโก้ Cisd เตือน"
+                referrerPolicy="no-referrer"
+                className="h-8 w-8 rounded-lg object-cover ring-1 ring-slate-900/15 shadow-xs"
+              />
+              <span>Cisd เตือน</span>
             </a>
 
             {/* Zone 2: concise single-line nav links */}
@@ -366,12 +373,25 @@ export default function App() {
           } flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between`}
         >
           <div>
+            {isWebMode && (
+              <div className="mb-2 inline-flex items-center gap-2">
+                <img
+                  src={cisdLogoImg}
+                  alt="โลโก้ Cisd เตือน"
+                  referrerPolicy="no-referrer"
+                  className="h-7 w-7 rounded-lg object-cover ring-1 ring-slate-900/15 shadow-xs"
+                />
+                <span className="text-sm font-bold tracking-tight text-slate-900">
+                  Cisd เตือน
+                </span>
+              </div>
+            )}
             <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl text-balance">
               {activeSection === 'mtf'
-                ? 'สรุปสถานะ CISD (M15)'
+                ? 'สรุปสถานะ Cisd เตือน (M15)'
                 : activeSection === 'telegram'
-                ? 'เชื่อมต่อ Telegram แจ้งเตือน CISD'
-                : `แจ้งเตือน CISD Timeframe ${cisdTimeframe}`}
+                ? 'เชื่อมต่อ Telegram แจ้งเตือน Cisd เตือน'
+                : `Cisd เตือน · Timeframe ${cisdTimeframe}`}
             </h1>
             <p className="mt-1.5 text-[13px] leading-relaxed text-slate-600">
               {isWebMode
@@ -494,7 +514,15 @@ export default function App() {
       {!isWebMode && (
         <footer className="border-t border-slate-200/80 bg-white py-5">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-4 text-xs text-slate-500 sm:px-6 lg:px-8">
-            <span className="font-medium text-slate-700">CISD Signal Studio</span>
+            <span className="inline-flex items-center gap-2 font-medium text-slate-700">
+              <img
+                src={cisdLogoImg}
+                alt="โลโก้ Cisd เตือน"
+                referrerPolicy="no-referrer"
+                className="h-5 w-5 rounded object-cover ring-1 ring-slate-900/10"
+              />
+              Cisd เตือน
+            </span>
             <span>US100 · M15 (US 100 Index Cash)</span>
           </div>
         </footer>

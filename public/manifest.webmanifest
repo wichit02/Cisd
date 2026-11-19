@@ -1,13 +1,13 @@
 {
   "id": "/",
-  "name": "AO Signal Studio",
-  "short_name": "AO Signal",
-  "description": "ระบบเฝ้ากราฟ AO M5 อัตโนมัติ แจ้งเตือนเข้ามือถือทันทีโดยไม่ต้องเปิดกราฟ",
+  "name": "Cisd เตือน",
+  "short_name": "Cisd เตือน",
+  "description": "ระบบเฝ้ากราฟ US100 M15 แบบ Real-Time แจ้งเตือนเข้ามือถือและ Telegram ทันที",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "theme_color": "#ffffff",
-  "background_color": "#f8fafc",
+  "background_color": "#090d16",
   "icons": [
     {
       "src": "/pwa-192x192.png",
