@@ -30,6 +30,7 @@ import cisdLogoImg from './assets/images/cisd_brand_logo_1795106433027.jpg';
 
 type ActiveSection =
   | 'm15'
+  | 'm5'
   | 'mtf'
   | 'mql5'
   | 'android'
@@ -38,7 +39,8 @@ type ActiveSection =
   | 'deploy';
 
 const NAV_ITEMS: Array<{ id: ActiveSection; label: string }> = [
-  { id: 'm15', label: 'กราฟ CISD' },
+  { id: 'm15', label: 'กราฟ M15' },
+  { id: 'm5', label: 'กราฟ M5' },
   { id: 'mtf', label: 'สถานะ M15' },
   { id: 'mql5', label: 'โค้ด MQL5' },
   { id: 'android', label: 'ตั้งค่ามือถือ' },
@@ -49,6 +51,7 @@ const NAV_ITEMS: Array<{ id: ActiveSection; label: string }> = [
 
 const SECTION_DESCRIPTIONS: Record<ActiveSection, string> = {
   m15: 'ตรวจสอบแท่งเทียนระบบ CISD Timeframe M15 พร้อมขีดเส้นและแจ้งเตือนทันที',
+  m5: 'ดูกราฟแท่งเทียน US100 Timeframe M5 แบบ Real-Time และแนว CISD (ไม่ส่งแจ้งเตือน)',
   mtf: 'สรุปทิศทางขึ้นหรือลงของระบบ CISD Timeframe M15 ดูง่าย สบายตา',
   mql5: 'ปรับแต่งเงื่อนไขและดาวน์โหลดโค้ด MQL5 พร้อมใช้งานใน MetaTrader 5',
   android: 'คู่มือตั้งค่า MetaTrader 5 บน Android และดาวน์โหลดไฟล์เสียงแจ้งเตือนความยาว 10 วินาที',
@@ -74,6 +77,8 @@ export default function App() {
     if (typeof window === 'undefined') return 'm15';
     const params = new URLSearchParams(window.location.search);
     const view = params.get('tab')?.toLowerCase();
+    const tf = params.get('tf')?.toUpperCase();
+    if (view === 'm5' || tf === 'M5') return 'm5';
     if (view === 'mtf') return 'mtf';
     if (view === 'telegram') return 'telegram';
     return 'm15';
@@ -258,7 +263,7 @@ export default function App() {
             {/* Zone 2: concise single-line nav links */}
             <nav
               aria-label="เมนูหลัก"
-              className="hidden md:flex items-center gap-3.5 lg:gap-4 text-[13px] font-medium"
+              className="hidden lg:flex items-center gap-3 xl:gap-4 text-[13px] font-medium"
             >
               {NAV_ITEMS.map((item) => {
                 const isActive = activeSection === item.id;
@@ -298,8 +303,8 @@ export default function App() {
             </div>
           </div>
 
-          {/* Mobile Nav Switcher */}
-          <div className="flex md:hidden items-center gap-1.5 overflow-x-auto border-t border-slate-100 px-4 py-2">
+          {/* Mobile & Tablet Nav Switcher */}
+          <div className="flex lg:hidden items-center gap-1.5 overflow-x-auto border-t border-slate-100 px-4 py-2">
             {NAV_ITEMS.map((item) => {
               const isActive = activeSection === item.id;
               return (
@@ -349,9 +354,10 @@ export default function App() {
           </div>
         )}
 
-        {/* Back button when opening sub-views outside the 3 main Web Mode tabs */}
+        {/* Back button when opening sub-views outside the main Web Mode tabs */}
         {isWebMode &&
           activeSection !== 'm15' &&
+          activeSection !== 'm5' &&
           activeSection !== 'mtf' &&
           activeSection !== 'telegram' && (
           <div className="mb-4">
@@ -387,7 +393,9 @@ export default function App() {
               </div>
             )}
             <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl text-balance">
-              {activeSection === 'mtf'
+              {activeSection === 'm5'
+                ? 'Cisd เตือน · กราฟ M5 (ไม่แจ้งเตือน)'
+                : activeSection === 'mtf'
                 ? 'สรุปสถานะ Cisd เตือน (M15)'
                 : activeSection === 'telegram'
                 ? 'เชื่อมต่อ Telegram แจ้งเตือน Cisd เตือน'
@@ -395,7 +403,9 @@ export default function App() {
             </h1>
             <p className="mt-1.5 text-[13px] leading-relaxed text-slate-600">
               {isWebMode
-                ? activeSection === 'mtf'
+                ? activeSection === 'm5'
+                  ? 'MetaTrader 5 · US100 M5 · ดูกราฟ Real-Time (ปิดแจ้งเตือน)'
+                  : activeSection === 'mtf'
                   ? 'CISD · US100 · M15'
                   : activeSection === 'telegram'
                   ? 'ใช้ Bot Token และ Chat ID เดิมบนเซิร์ฟเวอร์ พร้อมทดสอบส่งข้อความและเช็กประวัติแจ้งเตือน'
@@ -406,6 +416,7 @@ export default function App() {
 
           {isWebMode &&
             (activeSection === 'm15' ||
+              activeSection === 'm5' ||
               activeSection === 'mtf' ||
               activeSection === 'telegram') && (
             <div className="inline-flex flex-wrap items-center gap-1 self-start rounded-lg bg-slate-200/75 p-1">
@@ -419,6 +430,17 @@ export default function App() {
                 }`}
               >
                 กราฟ CISD ({cisdTimeframe})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveSection('m5')}
+                className={`h-9 rounded-md px-3 text-[13px] font-medium whitespace-nowrap transition-colors ${
+                  activeSection === 'm5'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                กราฟ M5
               </button>
               <button
                 type="button"
@@ -454,6 +476,7 @@ export default function App() {
         {/* Active Workspace View */}
         {activeSection === 'm15' && (
           <M15CisdChartView
+            key="cisd-m15"
             customPrefix={mql5Config.customPrefix}
             onSignalDetected={handleSignalDetected}
             recentSignals={signals}
@@ -464,6 +487,23 @@ export default function App() {
             timeframe={cisdTimeframe}
             onChangeTimeframe={setCisdTimeframe}
             onOpenStatusWindow={() => setActiveSection('mtf')}
+            disableAlerts={false}
+          />
+        )}
+
+        {activeSection === 'm5' && (
+          <M15CisdChartView
+            key="cisd-m5"
+            customPrefix={mql5Config.customPrefix}
+            onSignalDetected={handleSignalDetected}
+            recentSignals={signals}
+            onGoToSheets={() => setActiveSection('sheets')}
+            onGoToTelegram={() => setActiveSection('telegram')}
+            telegramSyncedReady={telegramSyncedReady}
+            isWebMode={isWebMode}
+            timeframe="M5"
+            onGoToM15={() => setActiveSection('m15')}
+            disableAlerts={true}
           />
         )}
 

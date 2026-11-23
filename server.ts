@@ -41,8 +41,9 @@ interface MarketFeedResult {
 type AoTimeframe = 'M5';
 const AO_TIMEFRAME_ORDER: AoTimeframe[] = ['M5'];
 
-type CisdTimeframe = 'M15';
+type CisdTimeframe = 'M5' | 'M15';
 const CISD_TIMEFRAME_ORDER: CisdTimeframe[] = ['M15'];
+const CISD_CHART_TIMEFRAMES: CisdTimeframe[] = ['M5', 'M15'];
 
 interface MonitorAlertEvent {
   id: string;
@@ -1700,6 +1701,7 @@ const YAHOO_CISD_PARAMS: Record<
     cacheMs: number;
   }
 > = {
+  M5: { interval: '5m', range: '5d', bucketMinutes: 5, maxAgeMinutes: 25, cacheMs: 1500 },
   M15: { interval: '15m', range: '15d', bucketMinutes: 15, maxAgeMinutes: 45, cacheMs: 1500 },
 };
 
@@ -1949,14 +1951,14 @@ const xmBridgeState: {
   symbol: 'US100Cash#',
   bid: 0,
   ask: 0,
-  barsByTf: { M15: [] },
+  barsByTf: { M5: [], M15: [] },
 };
 
 function isXmBridgeActive(): boolean {
   return (
     xmBridgeState.lastPushMs > 0 &&
     Date.now() - xmBridgeState.lastPushMs <= XM_BRIDGE_STALE_MS &&
-    xmBridgeState.barsByTf.M15.length >= 15
+    (xmBridgeState.barsByTf.M15.length >= 15 || xmBridgeState.barsByTf.M5.length >= 15)
   );
 }
 
@@ -1974,6 +1976,7 @@ function getXmBridgeStatusSnapshot() {
     symbol: xmBridgeState.symbol,
     bid: xmBridgeState.bid,
     ask: xmBridgeState.ask,
+    hasM5: xmBridgeState.barsByTf.M5.length >= 15,
     hasM15: xmBridgeState.barsByTf.M15.length >= 15,
   };
 }
@@ -2110,6 +2113,7 @@ const cfdStreamState: {
   lastBid: number;
   lastAsk: number;
   lastTickSec: number;
+  barsM5: Map<number, StreamOhlcBar>;
   barsM15: Map<number, StreamOhlcBar>;
   ws: any;
   reconnectTimer: NodeJS.Timeout | null;
@@ -2123,6 +2127,7 @@ const cfdStreamState: {
   lastBid: 0,
   lastAsk: 0,
   lastTickSec: 0,
+  barsM5: new Map(),
   barsM15: new Map(),
   ws: null,
   reconnectTimer: null,
@@ -2200,6 +2205,7 @@ function connectCfdWebSocket() {
 
   const sym = CFD_BROKER_SYMBOLS[cfdStreamState.brokerIndex] || CFD_BROKER_SYMBOLS[0];
   cfdStreamState.activeBrokerSymbol = sym;
+  cfdStreamState.barsM5.clear();
   cfdStreamState.barsM15.clear();
 
   let ws: any;
@@ -2218,6 +2224,7 @@ function connectCfdWebSocket() {
   cfdStreamState.ws = ws;
   const suffix = Math.random().toString(36).slice(2, 8);
   const qs = `qs_${suffix}`;
+  const cs5 = `cs5_${suffix}`;
   const cs15 = `cs15_${suffix}`;
 
   ws.onopen = () => {
@@ -2228,6 +2235,10 @@ function connectCfdWebSocket() {
     sendTvPacket(ws, 'quote_add_symbols', [qs, sym]);
 
     const resolvedSpec = `=${JSON.stringify({ symbol: sym, adjustment: 'splits' })}`;
+    sendTvPacket(ws, 'chart_create_session', [cs5, '']);
+    sendTvPacket(ws, 'resolve_symbol', [cs5, 'sds_sym_5', resolvedSpec]);
+    sendTvPacket(ws, 'create_series', [cs5, 'sds_5', 's1', 'sds_sym_5', '5', 160, '']);
+
     sendTvPacket(ws, 'chart_create_session', [cs15, '']);
     sendTvPacket(ws, 'resolve_symbol', [cs15, 'sds_sym_15', resolvedSpec]);
     sendTvPacket(ws, 'create_series', [cs15, 'sds_15', 's1', 'sds_sym_15', '15', 140, '']);
@@ -2282,6 +2293,9 @@ function connectCfdWebSocket() {
           }
         } else if ((msg.m === 'timescale_update' || msg.m === 'du') && Array.isArray(msg.p)) {
           const payload = msg.p[1] || {};
+          if (payload.sds_5?.s) {
+            applyTvSeriesUpdate(cfdStreamState.barsM5, payload.sds_5.s);
+          }
           if (payload.sds_15?.s) {
             applyTvSeriesUpdate(cfdStreamState.barsM15, payload.sds_15.s);
           }
@@ -2317,8 +2331,9 @@ setInterval(() => {
   }
 }, 10000);
 
-function getCfdStreamBars(_timeframe: CisdTimeframe): StreamOhlcBar[] {
-  return [...cfdStreamState.barsM15.values()].sort((a, b) => a.tsSec - b.tsSec);
+function getCfdStreamBars(timeframe: CisdTimeframe): StreamOhlcBar[] {
+  const sourceMap = timeframe === 'M5' ? cfdStreamState.barsM5 : cfdStreamState.barsM15;
+  return [...sourceMap.values()].sort((a, b) => a.tsSec - b.tsSec);
 }
 
 async function getLiveCisdFeed(
@@ -2893,6 +2908,7 @@ async function runBackgroundMonitorCycle() {
             : CISD_TIMEFRAME_ORDER;
 
         for (const cisdTf of cisdTargets) {
+          if (cisdTf !== 'M15') continue;
           try {
             const cisdFeed = await getLiveCisdFeed(sym, cisdTf);
             const cisdBars = cisdFeed.bars;
@@ -3098,14 +3114,16 @@ void PushMarketSnapshot()
    int digits = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
    long serverOffsetSec = (long)(TimeCurrent() - TimeGMT());
    string broker = AccountInfoString(ACCOUNT_COMPANY);
+   string m5Json  = BuildRatesJson(PERIOD_M5,  serverOffsetSec, InpBarsToSend);
    string m15Json = BuildRatesJson(PERIOD_M15, serverOffsetSec, InpBarsToSend);
 
    string payload = StringFormat(
-      "{\\"broker\\":\\"%s\\",\\"symbol\\":\\"%s\\",\\"bid\\":%.*f,\\"ask\\":%.*f,\\"barsM15\\":%s}",
+      "{\\"broker\\":\\"%s\\",\\"symbol\\":\\"%s\\",\\"bid\\":%.*f,\\"ask\\":%.*f,\\"barsM5\\":%s,\\"barsM15\\":%s}",
       broker,
       _Symbol,
       digits, bid,
       digits, ask,
+      m5Json,
       m15Json
    );
 
@@ -3191,13 +3209,17 @@ async function startServer() {
     const serverOffsetSec = Number.isFinite(Number(body.serverOffsetSec))
       ? Number(body.serverOffsetSec)
       : 0;
+    const parsedM5 = parseBridgeBarsInput(
+      body.barsM5 ?? (String(body.timeframe || '').toUpperCase() === 'M5' ? body.bars : undefined),
+      serverOffsetSec
+    );
     const parsedM15 = parseBridgeBarsInput(
       body.barsM15 ?? (String(body.timeframe || '').toUpperCase() === 'M15' ? body.bars : undefined),
       serverOffsetSec
     );
 
-    if ((!Number.isFinite(bid) || bid <= 0) && parsedM15.length === 0) {
-      res.status(400).json({ error: 'กรุณาส่งข้อมูลราคา bid หรือแท่งเทียน M15 จาก MT5' });
+    if ((!Number.isFinite(bid) || bid <= 0) && parsedM15.length === 0 && parsedM5.length === 0) {
+      res.status(400).json({ error: 'กรุณาส่งข้อมูลราคา bid หรือแท่งเทียนจาก MT5' });
       return;
     }
 
@@ -3213,6 +3235,7 @@ async function startServer() {
     }
     if (Number.isFinite(bid) && bid > 0) xmBridgeState.bid = bid;
     if (Number.isFinite(ask) && ask > 0) xmBridgeState.ask = ask;
+    if (parsedM5.length >= 15) xmBridgeState.barsByTf.M5 = parsedM5.slice(-160);
     if (parsedM15.length >= 15) xmBridgeState.barsByTf.M15 = parsedM15.slice(-140);
 
     cisdFeedCache.clear();
@@ -3227,6 +3250,7 @@ async function startServer() {
       connected: true,
       symbol: xmBridgeState.symbol,
       bid: xmBridgeState.bid,
+      m5Bars: xmBridgeState.barsByTf.M5.length,
       m15Bars: xmBridgeState.barsByTf.M15.length,
     });
   });
@@ -3327,8 +3351,8 @@ async function startServer() {
       res.status(400).json({ error: 'ไม่รองรับสินทรัพย์นี้' });
       return;
     }
-    if (!CISD_TIMEFRAME_ORDER.includes(rawTf)) {
-      res.status(400).json({ error: 'ไม่รองรับ Timeframe นี้ (รองรับ M15 เท่านั้น)' });
+    if (!CISD_CHART_TIMEFRAMES.includes(rawTf)) {
+      res.status(400).json({ error: 'ไม่รองรับ Timeframe นี้ (รองรับ M5 และ M15 เท่านั้น)' });
       return;
     }
     try {
@@ -3745,6 +3769,12 @@ async function startServer() {
       body.cisdLevel !== undefined && body.cisdLevel !== null ? Number(body.cisdLevel) : null;
     const mode = body.mode === 'live' ? 'live' : 'sim';
     const timestampIso = String(body.timestampIso || new Date().toISOString());
+
+    // M5 is strictly a display/chart view and must never trigger notifications
+    if (timeframe === 'M5') {
+      res.json({ ok: false, skipped: true, reason: 'm5_alerts_disabled' });
+      return;
+    }
 
     if (mode === 'live') {
       if (strategy === 'AO' && (!persisted.enabled || timeframe !== 'M5')) {

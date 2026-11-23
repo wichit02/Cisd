@@ -16,6 +16,7 @@ export interface CisdTimeframeConfig {
 }
 
 export const CISD_TIMEFRAMES: CisdTimeframeConfig[] = [
+  { id: 'M5', label: 'M5', thName: '5 นาที', minutes: 5, stepMult: 0.95 },
   { id: 'M15', label: 'M15', thName: '15 นาที', minutes: 15, stepMult: 1.45 },
 ];
 
@@ -59,8 +60,8 @@ const TWO_SWING_CISD_PATTERN = [
   1.15, 1.35, 1.45, 1.65,
 ];
 
-function getTimeframePhaseShift(_timeframe: CisdTimeframe): number {
-  return 7;
+function getTimeframePhaseShift(timeframe: CisdTimeframe): number {
+  return timeframe === 'M5' ? 11 : 7;
 }
 
 export function generateInitialCisdSeries(
@@ -143,11 +144,12 @@ export function planNextM15CloseDelta(
 export function tickFormingCisdBar(
   existingBars: M15CisdBar[],
   nextPrice: number,
-  symbol: TradingSymbol = 'US100'
+  symbol: TradingSymbol = 'US100',
+  timeframe: CisdTimeframe = 'M15'
 ): CisdDetectionResult {
   const spec = SYMBOL_SPECS[symbol];
   if (existingBars.length === 0) {
-    return generateInitialCisdSeries(symbol, 'M15');
+    return generateInitialCisdSeries(symbol, timeframe);
   }
 
   const rawBars: RawOhlcBar[] = existingBars.map((b, idx) => {

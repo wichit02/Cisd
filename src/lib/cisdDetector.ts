@@ -31,9 +31,10 @@ export interface M15CisdBar extends RawOhlcBar {
   activeBullCisdLevel: number | null;
 }
 
-export type CisdTimeframe = 'M15';
+export type CisdTimeframe = 'M5' | 'M15';
 
 export const CISD_TIMEFRAME_ORDER: CisdTimeframe[] = ['M15'];
+export const ALL_CISD_CHART_TIMEFRAMES: CisdTimeframe[] = ['M5', 'M15'];
 
 export interface LastCisdSignalInfo {
   signal: CisdSignalType;

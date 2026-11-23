@@ -65,6 +65,8 @@ interface M15CisdChartViewProps {
   timeframe?: CisdTimeframe;
   onChangeTimeframe?: (tf: CisdTimeframe) => void;
   onOpenStatusWindow?: () => void;
+  disableAlerts?: boolean;
+  onGoToM15?: () => void;
 }
 
 interface LiveM15FeedResponse {
@@ -166,8 +168,11 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
   isWebMode = false,
   timeframe: controlledTimeframe,
   onOpenStatusWindow,
+  disableAlerts = false,
+  onGoToM15,
 }) => {
   const activeTimeframe: CisdTimeframe = controlledTimeframe ?? 'M15';
+  const alertsDisabled = Boolean(disableAlerts) || activeTimeframe === 'M5';
 
   const [feedMode, setFeedMode] = useState<'live' | 'sim'>('live');
   const symbol: TradingSymbol = 'US100';
@@ -229,15 +234,16 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
 
   useEffect(() => {
     setBarCountdown(formatTimeframeCountdown(activeTimeframe));
+    const tfBucketSec = (CISD_TIMEFRAME_MAP[activeTimeframe]?.minutes || 15) * 60;
     const id = window.setInterval(() => {
       setBarCountdown(formatTimeframeCountdown(activeTimeframe));
       if (feedMode === 'live') {
         const xmSec = Math.floor(Date.now() / 1000) + getXmServerOffsetSec();
-        const currM15 = Math.floor(xmSec / 900);
+        const currBucket = Math.floor(xmSec / tfBucketSec);
         const prev = prevRolloverBucketRef.current;
-        prevRolloverBucketRef.current = currM15;
-        if (prev !== null && currM15 !== prev) {
-          void fetchLiveCisdBarsFnRef.current(symbol, 'M15', {
+        prevRolloverBucketRef.current = currBucket;
+        if (prev !== null && currBucket !== prev) {
+          void fetchLiveCisdBarsFnRef.current(symbol, activeTimeframe, {
             updateChart: true,
             fresh: true,
           });
@@ -458,6 +464,7 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
       sourceTag: string,
       mode: 'live' | 'sim'
     ) => {
+      if (alertsDisabled || tf === 'M5') return;
       const symSpec = SYMBOL_SPECS[sym];
       const timeStr = new Date(timestampIso).toLocaleString('th-TH', {
         year: 'numeric',
@@ -528,7 +535,7 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
         syncedToSheet: false,
       });
     },
-    [customPrefix, onSignalDetected, trigger10sSound]
+    [alertsDisabled, customPrefix, onSignalDetected, trigger10sSound]
   );
 
   useEffect(() => {
@@ -580,47 +587,49 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
         }
 
         // Closed bar is ALWAYS bars[length - 2]; also inspect [length - 3] if a 2s rollover jumped quickly
-        const latestClosedBar = data.bars[data.bars.length - 2];
-        const priorClosedBar = data.bars[data.bars.length - 3];
-        if (latestClosedBar) {
-          const prevClosedIso = lastKnownClosedIsoRef.current[targetTf];
-          lastKnownClosedIsoRef.current[targetTf] = latestClosedBar.timestampIso;
-          const isJustClosed =
-            prevClosedIso !== undefined && prevClosedIso !== latestClosedBar.timestampIso;
-          const tfMinutes = CISD_TIMEFRAME_MAP[targetTf]?.minutes || 15;
-          const candidates = isJustClosed
-            ? [latestClosedBar, priorClosedBar]
-            : [latestClosedBar];
+        if (!alertsDisabled && targetTf !== 'M5') {
+          const latestClosedBar = data.bars[data.bars.length - 2];
+          const priorClosedBar = data.bars[data.bars.length - 3];
+          if (latestClosedBar) {
+            const prevClosedIso = lastKnownClosedIsoRef.current[targetTf];
+            lastKnownClosedIsoRef.current[targetTf] = latestClosedBar.timestampIso;
+            const isJustClosed =
+              prevClosedIso !== undefined && prevClosedIso !== latestClosedBar.timestampIso;
+            const tfMinutes = CISD_TIMEFRAME_MAP[targetTf]?.minutes || 15;
+            const candidates = isJustClosed
+              ? [latestClosedBar, priorClosedBar]
+              : [latestClosedBar];
 
-          for (const closedBar of candidates) {
-            if (!closedBar || !closedBar.cisdSignal) continue;
-            const barCloseMs =
-              new Date(closedBar.timestampIso).getTime() + tfMinutes * 60000;
-            const closeAgeMinutes = (Date.now() - barCloseMs) / 60000;
-            const withinTimingWindow = isJustClosed
-              ? closeAgeMinutes <= tfMinutes * 2
-              : closeAgeMinutes >= -0.5 && closeAgeMinutes <= tfMinutes;
+            for (const closedBar of candidates) {
+              if (!closedBar || !closedBar.cisdSignal) continue;
+              const barCloseMs =
+                new Date(closedBar.timestampIso).getTime() + tfMinutes * 60000;
+              const closeAgeMinutes = (Date.now() - barCloseMs) / 60000;
+              const withinTimingWindow = isJustClosed
+                ? closeAgeMinutes <= tfMinutes * 2
+                : closeAgeMinutes >= -0.5 && closeAgeMinutes <= tfMinutes;
 
-            if (withinTimingWindow) {
-              const key = `${targetTf}-${targetSymbol}-${closedBar.timestampIso}-${closedBar.cisdSignal}`;
-              const shouldNotify =
-                directionFilter === 'both' ||
-                (directionFilter === 'buy_only' && closedBar.cisdSignal === 'BUY') ||
-                (directionFilter === 'sell_only' && closedBar.cisdSignal === 'SELL');
+              if (withinTimingWindow) {
+                const key = `${targetTf}-${targetSymbol}-${closedBar.timestampIso}-${closedBar.cisdSignal}`;
+                const shouldNotify =
+                  directionFilter === 'both' ||
+                  (directionFilter === 'buy_only' && closedBar.cisdSignal === 'BUY') ||
+                  (directionFilter === 'sell_only' && closedBar.cisdSignal === 'SELL');
 
-              if (shouldNotify && !alertedLiveBarsRef.current.has(key)) {
-                alertedLiveBarsRef.current.add(key);
-                emitCisdAlert(
-                  targetSymbol,
-                  targetTf,
-                  closedBar.cisdSignal,
-                  closedBar.cisdLevel,
-                  closedBar.close,
-                  closedBar.timeLabel,
-                  closedBar.timestampIso,
-                  `Live ${targetTf} CISD`,
-                  'live'
-                );
+                if (shouldNotify && !alertedLiveBarsRef.current.has(key)) {
+                  alertedLiveBarsRef.current.add(key);
+                  emitCisdAlert(
+                    targetSymbol,
+                    targetTf,
+                    closedBar.cisdSignal,
+                    closedBar.cisdLevel,
+                    closedBar.close,
+                    closedBar.timeLabel,
+                    closedBar.timestampIso,
+                    `Live ${targetTf} CISD`,
+                    'live'
+                  );
+                }
               }
             }
           }
@@ -635,7 +644,7 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
         }
       }
     },
-    [directionFilter, emitCisdAlert]
+    [alertsDisabled, directionFilter, emitCisdAlert]
   );
 
   fetchLiveCisdBarsFnRef.current = fetchLiveCisdBars;
@@ -717,15 +726,15 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
 
   useEffect(() => {
     if (feedMode !== 'live') return;
-    const pollCisdM15 = (showSpinner = false) => {
-      void fetchLiveCisdBars(symbol, 'M15', {
+    const pollCisd = (showSpinner = false) => {
+      void fetchLiveCisdBars(symbol, activeTimeframe, {
         updateChart: true,
         showSpinner,
       });
     };
-    pollCisdM15(true);
+    pollCisd(true);
     const barPollId = window.setInterval(() => {
-      pollCisdM15(false);
+      pollCisd(false);
     }, 2000);
     const tickPollId = window.setInterval(() => {
       void fetchLiveTick(symbol);
@@ -847,7 +856,7 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
       const fraction = plan.step === 1 ? 0.36 : plan.step === 2 ? 1.12 : 0.88;
       const intrabarPrice = plan.open + delta * fraction;
       triggerTickFlash(openBar.close, intrabarPrice);
-      const tickedResult = tickFormingCisdBar(currentBars, intrabarPrice, symbol);
+      const tickedResult = tickFormingCisdBar(currentBars, intrabarPrice, symbol, activeTimeframe);
       barsRef.current = tickedResult.bars;
       setSeriesState(tickedResult);
       setSimTickStep(plan.step);
@@ -1077,15 +1086,27 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-bold tracking-tight text-white sm:text-lg">
-                  Cisd เตือน
+                  {alertsDisabled ? `Cisd เตือน · กราฟ ${activeTimeframe}` : 'Cisd เตือน'}
                 </h2>
-                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-300 ring-1 ring-emerald-400/25">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  M15 LIVE
+                <span
+                  className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold ring-1 ${
+                    alertsDisabled
+                      ? 'bg-sky-500/15 text-sky-300 ring-sky-400/25'
+                      : 'bg-emerald-500/15 text-emerald-300 ring-emerald-400/25'
+                  }`}
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full animate-pulse ${
+                      alertsDisabled ? 'bg-sky-400' : 'bg-emerald-400'
+                    }`}
+                  />
+                  {alertsDisabled ? `${activeTimeframe} ดูกราฟ (ไม่แจ้งเตือน)` : 'M15 LIVE'}
                 </span>
               </div>
               <p className="mt-0.5 text-xs text-slate-300">
-                สแกนโครงสร้าง US100 M15 ทุก 2 วินาที · ส่งแจ้งเตือน Telegram (8217822307) & มือถือ
+                {alertsDisabled
+                  ? `อัปเดตกราฟ US100 ${activeTimeframe} แบบ Real-Time ทุก 2 วินาที (ปิดการแจ้งเตือนเฉพาะหน้านี้)`
+                  : 'สแกนโครงสร้าง US100 M15 ทุก 2 วินาที · ส่งแจ้งเตือน Telegram (8217822307) & มือถือ'}
               </p>
             </div>
           </div>
@@ -1097,7 +1118,7 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
         </div>
       </div>
 
-      {/* Control Toolbar (M15 Only) */}
+      {/* Control Toolbar */}
       <div className="flex flex-col gap-3.5 rounded-xl border border-slate-200/90 bg-white p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-3.5">
           {/* Live vs Sim Switch */}
@@ -1133,10 +1154,12 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
             <span aria-hidden="true" className="text-slate-300">·</span>
             <span className="font-medium text-amber-700">{activeTimeframe} · CISD</span>
             <span aria-hidden="true" className="text-slate-300">·</span>
-            <span className="text-slate-500">{spec.label}</span>
+            <span className="text-slate-500">
+              {alertsDisabled ? 'ดูกราฟอย่างเดียว (ไม่แจ้งเตือน)' : spec.label}
+            </span>
           </div>
 
-          {onOpenStatusWindow && !isWebMode && (
+          {onOpenStatusWindow && !isWebMode && !alertsDisabled && (
             <button
               type="button"
               onClick={onOpenStatusWindow}
@@ -1149,16 +1172,18 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <select
-            aria-label="ทิศทางแจ้งเตือน CISD"
-            value={directionFilter}
-            onChange={(e) => void handleDirectionChange(e.target.value as AlertDirection)}
-            className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-[13px] font-medium text-slate-700 focus:border-blue-600 focus:outline-none"
-          >
-            <option value="both">เตือนทั้งขาขึ้น & ขาลง</option>
-            <option value="sell_only">เฉพาะปิดต่ำกว่า CISD (SELL)</option>
-            <option value="buy_only">เฉพาะปิดเหนือ CISD (BUY)</option>
-          </select>
+          {!alertsDisabled && (
+            <select
+              aria-label="ทิศทางแจ้งเตือน CISD"
+              value={directionFilter}
+              onChange={(e) => void handleDirectionChange(e.target.value as AlertDirection)}
+              className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-[13px] font-medium text-slate-700 focus:border-blue-600 focus:outline-none"
+            >
+              <option value="both">เตือนทั้งขาขึ้น & ขาลง</option>
+              <option value="sell_only">เฉพาะปิดต่ำกว่า CISD (SELL)</option>
+              <option value="buy_only">เฉพาะปิดเหนือ CISD (BUY)</option>
+            </select>
+          )}
 
           {feedMode === 'live' ? (
             <button
@@ -1243,81 +1268,85 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
             </>
           )}
 
-          <button
-            type="button"
-            onClick={() => {
-              unlockAudioAlert();
-              if (soundEnabled) stopAudioAndTimer();
-              setSoundEnabled((s) => !s);
-            }}
-            aria-label="สลับเสียงเตือน 10 วินาที"
-            className={`inline-flex h-10 items-center gap-1.5 rounded-lg border px-3.5 text-[13px] font-medium whitespace-nowrap shrink-0 transition-colors ${
-              soundEnabled
-                ? 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                : 'border-slate-200 bg-slate-100 text-slate-500'
-            }`}
-          >
-            {soundEnabled ? (
-              <Volume2 className="h-4 w-4 text-blue-600" />
-            ) : (
-              <VolumeX className="h-4 w-4" />
-            )}
-            เสียง 10 วิ
-          </button>
+          {!alertsDisabled && (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  unlockAudioAlert();
+                  if (soundEnabled) stopAudioAndTimer();
+                  setSoundEnabled((s) => !s);
+                }}
+                aria-label="สลับเสียงเตือน 10 วินาที"
+                className={`inline-flex h-10 items-center gap-1.5 rounded-lg border px-3.5 text-[13px] font-medium whitespace-nowrap shrink-0 transition-colors ${
+                  soundEnabled
+                    ? 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                    : 'border-slate-200 bg-slate-100 text-slate-500'
+                }`}
+              >
+                {soundEnabled ? (
+                  <Volume2 className="h-4 w-4 text-blue-600" />
+                ) : (
+                  <VolumeX className="h-4 w-4" />
+                )}
+                เสียง 10 วิ
+              </button>
 
-          <button
-            type="button"
-            onClick={handleTestSound}
-            aria-label="ทดสอบเสียงเตือน"
-            className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50/70 px-3.5 text-[13px] font-medium text-blue-700 whitespace-nowrap shrink-0 transition-colors hover:bg-blue-100"
-          >
-            <Bell className="h-3.5 w-3.5" />
-            ทดสอบเสียง
-          </button>
+              <button
+                type="button"
+                onClick={handleTestSound}
+                aria-label="ทดสอบเสียงเตือน"
+                className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50/70 px-3.5 text-[13px] font-medium text-blue-700 whitespace-nowrap shrink-0 transition-colors hover:bg-blue-100"
+              >
+                <Bell className="h-3.5 w-3.5" />
+                ทดสอบเสียง
+              </button>
 
-          <button
-            type="button"
-            onClick={() => void handleEnableMobileNotify()}
-            disabled={mobileNotifyBusy}
-            aria-label="เปิดแจ้งเตือนเข้ามือถือ"
-            className={`inline-flex h-10 items-center gap-1.5 rounded-lg border px-3.5 text-[13px] font-medium whitespace-nowrap shrink-0 transition-colors disabled:opacity-60 ${
-              mobileNotifyReady
-                ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-            }`}
-          >
-            <Smartphone className="h-3.5 w-3.5" />
-            {mobileNotifyReady ? 'แจ้งเตือนมือถือ (เปิด)' : 'แจ้งเตือนเข้ามือถือ'}
-          </button>
+              <button
+                type="button"
+                onClick={() => void handleEnableMobileNotify()}
+                disabled={mobileNotifyBusy}
+                aria-label="เปิดแจ้งเตือนเข้ามือถือ"
+                className={`inline-flex h-10 items-center gap-1.5 rounded-lg border px-3.5 text-[13px] font-medium whitespace-nowrap shrink-0 transition-colors disabled:opacity-60 ${
+                  mobileNotifyReady
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <Smartphone className="h-3.5 w-3.5" />
+                {mobileNotifyReady ? 'แจ้งเตือนมือถือ (เปิด)' : 'แจ้งเตือนเข้ามือถือ'}
+              </button>
 
-          <button
-            type="button"
-            onClick={onGoToTelegram}
-            aria-label="เปิดหน้าเชื่อมต่อ Telegram"
-            className={`inline-flex h-10 items-center gap-1.5 rounded-lg border px-3.5 text-[13px] font-medium whitespace-nowrap shrink-0 transition-colors ${
-              telegramSyncedReady
-                ? 'border-sky-200 bg-sky-50 text-sky-800 hover:bg-sky-100'
-                : 'border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100'
-            }`}
-          >
-            <Send className="h-3.5 w-3.5" />
-            {telegramSyncedReady ? 'Telegram (เชื่อมต่อแล้ว)' : 'เชื่อมต่อ Telegram'}
-          </button>
+              <button
+                type="button"
+                onClick={onGoToTelegram}
+                aria-label="เปิดหน้าเชื่อมต่อ Telegram"
+                className={`inline-flex h-10 items-center gap-1.5 rounded-lg border px-3.5 text-[13px] font-medium whitespace-nowrap shrink-0 transition-colors ${
+                  telegramSyncedReady
+                    ? 'border-sky-200 bg-sky-50 text-sky-800 hover:bg-sky-100'
+                    : 'border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100'
+                }`}
+              >
+                <Send className="h-3.5 w-3.5" />
+                {telegramSyncedReady ? 'Telegram (เชื่อมต่อแล้ว)' : 'เชื่อมต่อ Telegram'}
+              </button>
 
-          {soundSecondsLeft > 0 && (
-            <button
-              type="button"
-              onClick={stopAudioAndTimer}
-              className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-amber-600 px-3.5 text-[13px] font-medium text-white whitespace-nowrap shrink-0 transition-colors hover:bg-amber-700"
-            >
-              <Square className="h-3.5 w-3.5" />
-              หยุด ({soundSecondsLeft}s)
-            </button>
+              {soundSecondsLeft > 0 && (
+                <button
+                  type="button"
+                  onClick={stopAudioAndTimer}
+                  className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-amber-600 px-3.5 text-[13px] font-medium text-white whitespace-nowrap shrink-0 transition-colors hover:bg-amber-700"
+                >
+                  <Square className="h-3.5 w-3.5" />
+                  หยุด ({soundSecondsLeft}s)
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
 
-      {telegramSyncedReady === false && (
+      {!alertsDisabled && telegramSyncedReady === false && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
@@ -1822,96 +1851,121 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
           </div>
       </div>
 
-      {/* Server Auto-Monitor US100 M15 + One-Tap Mobile Push Card (matching user screenshot) */}
-      <div className="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 space-y-3.5">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <span
-              className={`h-2.5 w-2.5 shrink-0 rounded-full ${
-                serverM15Enabled ? 'bg-emerald-500 animate-pulse' : 'bg-emerald-500/50'
+      {/* Server Auto-Monitor US100 M15 + One-Tap Mobile Push Card (hidden on M5 silent view) */}
+      {alertsDisabled ? (
+        <div className="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-sky-500" />
+            <div>
+              <p className="text-sm font-semibold text-slate-900">
+                หน้ากราฟ US100 {activeTimeframe} (ดูกราฟและแนว CISD อย่างเดียว · ไม่ส่งแจ้งเตือน)
+              </p>
+              <p className="mt-0.5 text-xs text-slate-500">
+                หน้านี้ปิดเสียงเตือน, Telegram และ Push Notification ทั้งหมด — ระบบเฝ้ากราฟแจ้งเตือนอัตโนมัติยังทำงานปกติที่ Timeframe M15
+              </p>
+            </div>
+          </div>
+          {onGoToM15 && (
+            <button
+              type="button"
+              onClick={onGoToM15}
+              className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-4 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100"
+            >
+              กลับไปหน้า M15 (มีแจ้งเตือน)
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 space-y-3.5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span
+                className={`h-2.5 w-2.5 shrink-0 rounded-full ${
+                  serverM15Enabled ? 'bg-emerald-500 animate-pulse' : 'bg-emerald-500/50'
+                }`}
+              />
+              <span className="text-sm font-semibold text-slate-900 truncate">
+                เซิร์ฟเวอร์เฝ้ากราฟ US100 M15 อัตโนมัติ
+              </span>
+            </div>
+
+            <button
+              type="button"
+              disabled={togglingServerMonitor}
+              onClick={() => void handleToggleServerMonitor()}
+              title="แตะเพื่อสลับเปิด/พักชั่วคราว การเฝ้ากราฟ M15 บนเซิร์ฟเวอร์"
+              className={`shrink-0 text-xs font-medium transition-colors disabled:opacity-50 ${
+                serverM15Enabled
+                  ? 'text-emerald-700 hover:text-emerald-800'
+                  : 'text-slate-500 hover:text-slate-800'
               }`}
-            />
-            <span className="text-sm font-semibold text-slate-900 truncate">
-              เซิร์ฟเวอร์เฝ้ากราฟ US100 M15 อัตโนมัติ
-            </span>
+            >
+              {togglingServerMonitor
+                ? 'กำลังสลับ...'
+                : serverM15Enabled
+                ? 'กำลังทำงาน'
+                : 'พักชั่วคราว'}
+            </button>
           </div>
 
           <button
             type="button"
-            disabled={togglingServerMonitor}
-            onClick={() => void handleToggleServerMonitor()}
-            title="แตะเพื่อสลับเปิด/พักชั่วคราว การเฝ้ากราฟ M15 บนเซิร์ฟเวอร์"
-            className={`shrink-0 text-xs font-medium transition-colors disabled:opacity-50 ${
-              serverM15Enabled
-                ? 'text-emerald-700 hover:text-emerald-800'
-                : 'text-slate-500 hover:text-slate-800'
-            }`}
+            disabled={mobileNotifyBusy}
+            onClick={() => void handleEnableMobileNotify()}
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
           >
-            {togglingServerMonitor
-              ? 'กำลังสลับ...'
-              : serverM15Enabled
-              ? 'กำลังทำงาน'
-              : 'พักชั่วคราว'}
+            <Bell className="h-4 w-4 shrink-0" />
+            {mobileNotifyBusy
+              ? 'กำลังเชื่อมต่อแจ้งเตือนเข้ามือถือ...'
+              : mobileNotifyReady
+              ? 'รับแจ้งเตือนเข้ามือถือ (เปิดอยู่ · กดทดสอบ)'
+              : 'รับแจ้งเตือนเข้ามือถือ (ไม่ต้องลงแอป)'}
           </button>
-        </div>
 
-        <button
-          type="button"
-          disabled={mobileNotifyBusy}
-          onClick={() => void handleEnableMobileNotify()}
-          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
-        >
-          <Bell className="h-4 w-4 shrink-0" />
-          {mobileNotifyBusy
-            ? 'กำลังเชื่อมต่อแจ้งเตือนเข้ามือถือ...'
-            : mobileNotifyReady
-            ? 'รับแจ้งเตือนเข้ามือถือ (เปิดอยู่ · กดทดสอบ)'
-            : 'รับแจ้งเตือนเข้ามือถือ (ไม่ต้องลงแอป)'}
-        </button>
+          {mobileNotifySuccess && (
+            <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+              <span>{mobileNotifySuccess}</span>
+            </div>
+          )}
 
-        {mobileNotifySuccess && (
-          <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
-            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-            <span>{mobileNotifySuccess}</span>
-          </div>
-        )}
+          {mobileNotifyHint && (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+              <span>{mobileNotifyHint}</span>
+              {typeof window !== 'undefined' && window.self !== window.top && (
+                <a
+                  href={window.location.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-7 items-center rounded-md bg-amber-600 px-2.5 text-[11px] font-semibold text-white hover:bg-amber-700"
+                >
+                  เปิดเต็มจอในแท็บใหม่
+                </a>
+              )}
+            </div>
+          )}
 
-        {mobileNotifyHint && (
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-            <span>{mobileNotifyHint}</span>
-            {typeof window !== 'undefined' && window.self !== window.top && (
-              <a
-                href={window.location.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex h-7 items-center rounded-md bg-amber-600 px-2.5 text-[11px] font-semibold text-white hover:bg-amber-700"
-              >
-                เปิดเต็มจอในแท็บใหม่
-              </a>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
+            <span>
+              {serverSubscribersCount > 0
+                ? `อุปกรณ์รับ Push เชื่อมต่ออยู่ ${serverSubscribersCount} เครื่อง`
+                : 'แจ้งเตือนผ่านเบราว์เซอร์, มือถือ (PWA) และ Telegram (8217822307)'}
+            </span>
+            {serverLastCheckedAt && (
+              <span className="font-mono tabular-nums">
+                สแกนล่าสุด{' '}
+                {new Date(serverLastCheckedAt).toLocaleTimeString('th-TH', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                  hour12: false,
+                  timeZone: 'Asia/Bangkok',
+                })}
+              </span>
             )}
           </div>
-        )}
-
-        <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
-          <span>
-            {serverSubscribersCount > 0
-              ? `อุปกรณ์รับ Push เชื่อมต่ออยู่ ${serverSubscribersCount} เครื่อง`
-              : 'แจ้งเตือนผ่านเบราว์เซอร์, มือถือ (PWA) และ Telegram (8217822307)'}
-          </span>
-          {serverLastCheckedAt && (
-            <span className="font-mono tabular-nums">
-              สแกนล่าสุด{' '}
-              {new Date(serverLastCheckedAt).toLocaleTimeString('th-TH', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false,
-                timeZone: 'Asia/Bangkok',
-              })}
-            </span>
-          )}
         </div>
-      </div>
+      )}
 
       {/* 4-Column Summary Strip (shown in Studio mode only) */}
       {!isWebMode && (
