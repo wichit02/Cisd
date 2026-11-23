@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { SYMBOL_SPECS, type TradingSymbol } from '../lib/aoSimulator';
 import {
-  CISD_TIMEFRAME_ORDER,
+  ALL_CISD_CHART_TIMEFRAMES,
   type CisdTimeframe,
   type LastCisdSignalInfo,
 } from '../lib/cisdDetector';
@@ -57,7 +57,7 @@ export const MultiTimeframeStatusWindow: React.FC<
 
   const buildSimStatuses = useCallback((): TimeframeStatusItem[] => {
     const nowIso = new Date().toISOString();
-    return CISD_TIMEFRAME_ORDER.map((tf) => {
+    return ALL_CISD_CHART_TIMEFRAMES.map((tf) => {
       const series = generateInitialCisdSeries(symbol, tf, 96);
       const latestBar = series.bars[series.bars.length - 1];
       const closedBar = series.bars[series.bars.length - 2];
@@ -116,7 +116,7 @@ export const MultiTimeframeStatusWindow: React.FC<
         fetchedAt: string;
       };
       const byTf = new Map(data.timeframes.map((t) => [t.timeframe, t]));
-      const ordered = CISD_TIMEFRAME_ORDER.map((tf) => byTf.get(tf)).filter(
+      const ordered = ALL_CISD_CHART_TIMEFRAMES.map((tf) => byTf.get(tf)).filter(
         (v): v is TimeframeStatusItem => Boolean(v)
       );
       setItems(ordered);
@@ -170,10 +170,10 @@ export const MultiTimeframeStatusWindow: React.FC<
     let overallTone: 'up' | 'down' | 'mixed' = 'mixed';
     if (items.length > 0) {
       if (upCount === items.length) {
-        overallLabel = 'M15 เป็นขาขึ้นชัดเจน';
+        overallLabel = 'M15 & M5 เป็นขาขึ้นทั้งคู่';
         overallTone = 'up';
       } else if (downCount === items.length) {
-        overallLabel = 'M15 เป็นขาลงชัดเจน';
+        overallLabel = 'M15 & M5 เป็นขาลงทั้งคู่';
         overallTone = 'down';
       } else if (upCount > downCount) {
         overallLabel = 'ภาพรวมโน้มเอียงฝั่งขึ้น';
@@ -181,6 +181,9 @@ export const MultiTimeframeStatusWindow: React.FC<
       } else if (downCount > upCount) {
         overallLabel = 'ภาพรวมโน้มเอียงฝั่งลง';
         overallTone = 'down';
+      } else if (upCount > 0 && downCount > 0) {
+        overallLabel = 'M15 & M5 ทิศทางสวนทางกัน';
+        overallTone = 'mixed';
       } else {
         overallLabel = 'รอสัญญาณยืนยันทิศทาง';
         overallTone = 'mixed';
@@ -284,7 +287,7 @@ export const MultiTimeframeStatusWindow: React.FC<
             </span>
             <div>
               <p className="text-[11px] font-medium text-slate-400">
-                ภาพรวม CISD (M15)
+                ภาพรวม CISD (M15 · M5)
               </p>
               <p
                 className={`text-sm font-semibold ${
@@ -311,7 +314,7 @@ export const MultiTimeframeStatusWindow: React.FC<
 
         {/* Mobile & Tablet (< lg): Spacious, Calm Full-Width Rows */}
         <div className="divide-y divide-slate-100 lg:hidden">
-          {CISD_TIMEFRAME_ORDER.map((tf) => {
+          {ALL_CISD_CHART_TIMEFRAMES.map((tf) => {
             const item = items.find((i) => i.timeframe === tf);
             const meta = CISD_TIMEFRAME_MAP[tf];
             const isUp = item?.status === 'UP';
@@ -352,7 +355,7 @@ export const MultiTimeframeStatusWindow: React.FC<
                       {tf}
                     </span>
                     <span className="mt-0.5 block text-[13px] text-slate-500 truncate">
-                      {meta.thName}
+                      {meta.thName} · {tf === 'M5' ? 'ไม่แจ้งเตือน' : 'แจ้งเตือน'}
                     </span>
                   </div>
                 </div>
@@ -384,9 +387,9 @@ export const MultiTimeframeStatusWindow: React.FC<
           })}
         </div>
 
-        {/* Desktop (lg+): Clean Single M15 Tile */}
-        <div className="hidden lg:grid lg:grid-cols-1 lg:gap-4 lg:p-6">
-          {CISD_TIMEFRAME_ORDER.map((tf) => {
+        {/* Desktop (lg+): Clean 2-Column M15 & M5 Tiles */}
+        <div className="hidden lg:grid lg:grid-cols-2 lg:gap-4 lg:p-6">
+          {ALL_CISD_CHART_TIMEFRAMES.map((tf) => {
             const item = items.find((i) => i.timeframe === tf);
             const meta = CISD_TIMEFRAME_MAP[tf];
             const isUp = item?.status === 'UP';
@@ -410,7 +413,7 @@ export const MultiTimeframeStatusWindow: React.FC<
                     {tf}
                   </span>
                   <span className="mt-0.5 block text-xs text-slate-500">
-                    {meta.thName}
+                    {meta.thName} · {tf === 'M5' ? 'ไม่แจ้งเตือน' : 'แจ้งเตือน'}
                   </span>
                 </div>
 

@@ -1166,7 +1166,7 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
               className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-semibold text-blue-700 whitespace-nowrap shrink-0 transition-colors hover:bg-blue-100"
             >
               <LayoutGrid className="h-3.5 w-3.5" />
-              สถานะ M15 (ขึ้น/ลง)
+              สถานะ M15/M5 (ขึ้น/ลง)
             </button>
           )}
         </div>

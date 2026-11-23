@@ -41,7 +41,7 @@ type ActiveSection =
 const NAV_ITEMS: Array<{ id: ActiveSection; label: string }> = [
   { id: 'm15', label: 'กราฟ M15' },
   { id: 'm5', label: 'กราฟ M5' },
-  { id: 'mtf', label: 'สถานะ M15' },
+  { id: 'mtf', label: 'สถานะ M15/M5' },
   { id: 'mql5', label: 'โค้ด MQL5' },
   { id: 'android', label: 'ตั้งค่ามือถือ' },
   { id: 'telegram', label: 'Telegram' },
@@ -52,7 +52,7 @@ const NAV_ITEMS: Array<{ id: ActiveSection; label: string }> = [
 const SECTION_DESCRIPTIONS: Record<ActiveSection, string> = {
   m15: 'ตรวจสอบแท่งเทียนระบบ CISD Timeframe M15 พร้อมขีดเส้นและแจ้งเตือนทันที',
   m5: 'ดูกราฟแท่งเทียน US100 Timeframe M5 แบบ Real-Time และแนว CISD (ไม่ส่งแจ้งเตือน)',
-  mtf: 'สรุปทิศทางขึ้นหรือลงของระบบ CISD Timeframe M15 ดูง่าย สบายตา',
+  mtf: 'สรุปทิศทางขึ้นหรือลงของระบบ CISD Timeframe M15 และ M5 ดูง่าย สบายตา',
   mql5: 'ปรับแต่งเงื่อนไขและดาวน์โหลดโค้ด MQL5 พร้อมใช้งานใน MetaTrader 5',
   android: 'คู่มือตั้งค่า MetaTrader 5 บน Android และดาวน์โหลดไฟล์เสียงแจ้งเตือนความยาว 10 วินาที',
   telegram: 'เชื่อมต่อบอท Telegram เพื่อรับสัญญาณ CISD (M15) เข้าแชทอัตโนมัติ',
@@ -396,7 +396,7 @@ export default function App() {
               {activeSection === 'm5'
                 ? 'Cisd เตือน · กราฟ M5 (ไม่แจ้งเตือน)'
                 : activeSection === 'mtf'
-                ? 'สรุปสถานะ Cisd เตือน (M15)'
+                ? 'สรุปสถานะ Cisd เตือน (M15 · M5)'
                 : activeSection === 'telegram'
                 ? 'เชื่อมต่อ Telegram แจ้งเตือน Cisd เตือน'
                 : `Cisd เตือน · Timeframe ${cisdTimeframe}`}
@@ -406,7 +406,7 @@ export default function App() {
                 ? activeSection === 'm5'
                   ? 'MetaTrader 5 · US100 M5 · ดูกราฟ Real-Time (ปิดแจ้งเตือน)'
                   : activeSection === 'mtf'
-                  ? 'CISD · US100 · M15'
+                  ? 'CISD · US100 · M15 · M5'
                   : activeSection === 'telegram'
                   ? 'ใช้ Bot Token และ Chat ID เดิมบนเซิร์ฟเวอร์ พร้อมทดสอบส่งข้อความและเช็กประวัติแจ้งเตือน'
                   : `MetaTrader 5 · US100 ${cisdTimeframe} · CISD (ขาขึ้น / ขาลง)`
@@ -451,7 +451,7 @@ export default function App() {
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                สถานะ M15
+                สถานะ M15/M5
               </button>
               <button
                 type="button"
@@ -511,8 +511,12 @@ export default function App() {
           <MultiTimeframeStatusWindow
             selectedTimeframe={cisdTimeframe}
             onSelectTimeframeForChart={(tf) => {
-              setCisdTimeframe(tf);
-              setActiveSection('m15');
+              if (tf === 'M5') {
+                setActiveSection('m5');
+              } else {
+                setCisdTimeframe(tf);
+                setActiveSection('m15');
+              }
             }}
             isWebMode={isWebMode}
           />

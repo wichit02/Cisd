@@ -43,7 +43,7 @@ const AO_TIMEFRAME_ORDER: AoTimeframe[] = ['M5'];
 
 type CisdTimeframe = 'M5' | 'M15';
 const CISD_TIMEFRAME_ORDER: CisdTimeframe[] = ['M15'];
-const CISD_CHART_TIMEFRAMES: CisdTimeframe[] = ['M5', 'M15'];
+const CISD_CHART_TIMEFRAMES: CisdTimeframe[] = ['M15', 'M5'];
 
 interface MonitorAlertEvent {
   id: string;
@@ -3373,7 +3373,7 @@ async function startServer() {
     }
     const sym = rawSymbol as TradingSymbol;
     const statuses = await Promise.all(
-      CISD_TIMEFRAME_ORDER.map(async (tf) => {
+      CISD_CHART_TIMEFRAMES.map(async (tf) => {
         try {
           const feed = await getLiveCisdFeed(sym, tf);
           const latestBar = feed.bars[feed.bars.length - 1];
@@ -3434,7 +3434,7 @@ async function startServer() {
 
     res.json({
       symbol: sym,
-      order: CISD_TIMEFRAME_ORDER,
+      order: CISD_CHART_TIMEFRAMES,
       fetchedAt: new Date().toISOString(),
       timeframes: statuses,
     });
