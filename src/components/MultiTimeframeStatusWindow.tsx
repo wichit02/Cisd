@@ -48,7 +48,7 @@ interface MultiTimeframeStatusWindowProps {
 
 export const MultiTimeframeStatusWindow: React.FC<
   MultiTimeframeStatusWindowProps
-> = ({ onSelectTimeframeForChart }) => {
+> = ({ onSelectTimeframeForChart, isWebMode = false }) => {
   const symbol: TradingSymbol = 'US100';
   const spec = SYMBOL_SPECS[symbol];
 
@@ -220,40 +220,42 @@ export const MultiTimeframeStatusWindow: React.FC<
         </div>
       )}
 
-      {/* Soft Obsidian Brand Banner matching Cisd เตือน theme */}
-      <div className="rounded-2xl border border-slate-700/60 bg-gradient-to-r from-[#111726] via-[#151d30] to-[#1a2338] px-5 py-4 text-slate-100 shadow-xs sm:px-6 sm:py-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3.5">
-            <img
-              src={cisdLogoImg}
-              alt="โลโก้ Cisd เตือน"
-              referrerPolicy="no-referrer"
-              className="h-11 w-11 shrink-0 rounded-xl object-cover ring-1 ring-amber-300/30"
-            />
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-base font-semibold tracking-tight text-slate-100 sm:text-lg">
-                  Cisd เตือน · สรุปทิศทาง M15 และ M5
-                </h2>
-                <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-800/80 px-2.5 py-0.5 text-xs font-medium text-amber-200/90 ring-1 ring-amber-300/20">
-                  US100Cash#
-                </span>
+      {/* Soft Obsidian Brand Banner matching Cisd เตือน theme (Studio/Preview mode only) */}
+      {!isWebMode && (
+        <div className="rounded-2xl border border-slate-700/60 bg-gradient-to-r from-[#111726] via-[#151d30] to-[#1a2338] px-5 py-4 text-slate-100 shadow-xs sm:px-6 sm:py-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3.5">
+              <img
+                src={cisdLogoImg}
+                alt="โลโก้ Cisd เตือน"
+                referrerPolicy="no-referrer"
+                className="h-11 w-11 shrink-0 rounded-xl object-cover ring-1 ring-amber-300/30"
+              />
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-base font-semibold tracking-tight text-slate-100 sm:text-lg">
+                    Cisd เตือน · สรุปทิศทาง M15 และ M5
+                  </h2>
+                  <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-800/80 px-2.5 py-0.5 text-xs font-medium text-amber-200/90 ring-1 ring-amber-300/20">
+                    US100Cash#
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-slate-300/90">
+                  มุมมองเปรียบเทียบแนวโน้ม M15 (เปิดแจ้งเตือน) และ M5 (ดูกราฟอย่างเดียว) แบบสบายตา
+                </p>
               </div>
-              <p className="mt-1 text-sm text-slate-300/90">
-                มุมมองเปรียบเทียบแนวโน้ม M15 (เปิดแจ้งเตือน) และ M5 (ดูกราฟอย่างเดียว) แบบสบายตา
-              </p>
+            </div>
+
+            <div className="flex items-center gap-2 text-xs font-medium text-slate-300/90 sm:text-sm">
+              {lastUpdated && (
+                <span className="rounded-lg bg-slate-900/60 px-3 py-1.5 font-mono tabular-nums ring-1 ring-white/10">
+                  อัปเดต {lastUpdated}
+                </span>
+              )}
             </div>
           </div>
-
-          <div className="flex items-center gap-2 text-xs font-medium text-slate-300/90 sm:text-sm">
-            {lastUpdated && (
-              <span className="rounded-lg bg-slate-900/60 px-3 py-1.5 font-mono tabular-nums ring-1 ring-white/10">
-                อัปเดต {lastUpdated}
-              </span>
-            )}
-          </div>
         </div>
-      </div>
+      )}
 
       {/* Main Low-Contrast Status Container */}
       <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-[#f9fafc]">
@@ -442,39 +444,47 @@ export const MultiTimeframeStatusWindow: React.FC<
                       {isLoading && !item
                         ? 'กำลังโหลด...'
                         : isUp
-                        ? 'ขาขึ้น (BUY)'
+                        ? isWebMode
+                          ? 'ขาขึ้น'
+                          : 'ขาขึ้น (BUY)'
                         : isDown
-                        ? 'ขาลง (SELL)'
+                        ? isWebMode
+                          ? 'ขาลง'
+                          : 'ขาลง (SELL)'
                         : 'รอสัญญาณ'}
                     </p>
                   </div>
 
-                  <div className="text-right">
-                    <p className="text-xs font-medium text-slate-500 sm:text-sm">
-                      ราคาปัจจุบัน
-                    </p>
-                    <p className="mt-0.5 font-mono text-base font-semibold text-slate-800 tabular-nums sm:text-lg">
-                      {item && item.currentPrice > 0
-                        ? item.currentPrice.toFixed(spec.digits)
-                        : '—'}
-                    </p>
-                  </div>
+                  {!isWebMode && (
+                    <div className="text-right">
+                      <p className="text-xs font-medium text-slate-500 sm:text-sm">
+                        ราคาปัจจุบัน
+                      </p>
+                      <p className="mt-0.5 font-mono text-base font-semibold text-slate-800 tabular-nums sm:text-lg">
+                        {item && item.currentPrice > 0
+                          ? item.currentPrice.toFixed(spec.digits)
+                          : '—'}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
-                {/* Bottom Row: CISD Watch Level + Open Chart Prompt */}
+                {/* Bottom Row: CISD Watch Level (Studio/Preview only) + Open Chart Prompt */}
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-sm text-slate-600">
-                  <span className="font-medium">
-                    {activeCisdWatch !== null && activeCisdWatch !== undefined ? (
-                      <>
-                        {activeWatchLabel}:{' '}
-                        <span className="font-mono font-semibold text-slate-700 tabular-nums">
-                          {activeCisdWatch.toFixed(spec.digits)}
-                        </span>
-                      </>
-                    ) : (
-                      'รอสร้างแนวโครงสร้าง CISD ใหม่'
-                    )}
-                  </span>
+                  {!isWebMode && (
+                    <span className="font-medium">
+                      {activeCisdWatch !== null && activeCisdWatch !== undefined ? (
+                        <>
+                          {activeWatchLabel}:{' '}
+                          <span className="font-mono font-semibold text-slate-700 tabular-nums">
+                            {activeCisdWatch.toFixed(spec.digits)}
+                          </span>
+                        </>
+                      ) : (
+                        'รอสร้างแนวโครงสร้าง CISD ใหม่'
+                      )}
+                    </span>
+                  )}
 
                   <span className="inline-flex items-center gap-1 font-medium text-slate-700 group-hover:text-slate-900">
                     เปิดกราฟ {tf}
