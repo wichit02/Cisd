@@ -2001,80 +2001,82 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
         </div>
       )}
 
-      {/* XM MT5 Live Bridge Card (Direct EA stream or Automatic Real-Time Forex CFD WebSocket) */}
-      <div className="rounded-xl border border-slate-200/90 bg-white p-5 sm:p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-1.5 max-w-2xl">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <h3 className="text-sm font-semibold text-slate-900">
-                XM MT5 Live Bridge (XM_MT5_LiveBridge_EA.mq5)
-              </h3>
-              <span
-                className={`inline-flex items-center gap-1.5 text-xs font-semibold ${
-                  xmBridgeStatus?.connected ? 'text-emerald-700' : 'text-sky-700'
-                }`}
-              >
+      {/* XM MT5 Live Bridge Card (shown in Studio/preview mode only; hidden on deployed live web) */}
+      {!isWebMode && (
+        <div className="rounded-xl border border-slate-200/90 bg-white p-5 sm:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-1.5 max-w-2xl">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <h3 className="text-sm font-semibold text-slate-900">
+                  XM MT5 Live Bridge (XM_MT5_LiveBridge_EA.mq5)
+                </h3>
                 <span
-                  className={`h-2 w-2 rounded-full ${
-                    xmBridgeStatus?.connected
-                      ? 'bg-emerald-500 animate-pulse'
-                      : xmBridgeStatus?.cfdStream?.connected
-                      ? 'bg-sky-500 animate-pulse'
-                      : 'bg-amber-500'
+                  className={`inline-flex items-center gap-1.5 text-xs font-semibold ${
+                    xmBridgeStatus?.connected ? 'text-emerald-700' : 'text-sky-700'
                   }`}
-                />
-                {xmBridgeStatus?.connected
-                  ? `เชื่อมต่อ XM MT5 แล้ว (${xmBridgeStatus.symbol} · Bid ${xmBridgeStatus.bid.toFixed(
-                      spec.digits
-                    )})`
-                  : xmBridgeStatus?.cfdStream?.connected
-                  ? `ใช้ฟีด Forex MT5 CFD สดอัตโนมัติทุก 2 วิ (${xmBridgeStatus.cfdStream.brokerSymbol})`
-                  : 'กำลังเชื่อมต่อฟีดตลาด Forex MT5 CFD...'}
-              </span>
+                >
+                  <span
+                    className={`h-2 w-2 rounded-full ${
+                      xmBridgeStatus?.connected
+                        ? 'bg-emerald-500 animate-pulse'
+                        : xmBridgeStatus?.cfdStream?.connected
+                        ? 'bg-sky-500 animate-pulse'
+                        : 'bg-amber-500'
+                    }`}
+                  />
+                  {xmBridgeStatus?.connected
+                    ? `เชื่อมต่อ XM MT5 แล้ว (${xmBridgeStatus.symbol} · Bid ${xmBridgeStatus.bid.toFixed(
+                        spec.digits
+                      )})`
+                    : xmBridgeStatus?.cfdStream?.connected
+                    ? `ใช้ฟีด Forex MT5 CFD สดอัตโนมัติทุก 2 วิ (${xmBridgeStatus.cfdStream.brokerSymbol})`
+                    : 'กำลังเชื่อมต่อฟีดตลาด Forex MT5 CFD...'}
+                </span>
+              </div>
+              <p className="text-xs leading-relaxed text-slate-600">
+                เนื่องจากเซิร์ฟเวอร์ภายนอกไม่สามารถล็อกอินเข้าบัญชี MT5 ของโบรกเกอร์ XM โดยตรงได้หากไม่มีเทอร์มินัล MT5 รันอยู่ — หากต้องการราคาและสเปรดตรงกับ{' '}
+                <span className="font-mono font-semibold text-slate-800">US100Cash#</span> บน XM MT5 ของคุณ 100% สามารถดาวน์โหลด{' '}
+                <span className="font-mono font-medium text-slate-800">XM_MT5_LiveBridge_EA.mq5</span>{' '}
+                ไปติดบนกราฟ MT5 เพื่อส่งแท่ง M15 และราคา Bid เข้าเว็บทุก 2 วินาที (หากไม่ได้ติด ระบบจะใช้ฟีด Forex MT5 CFD แบบ Real-Time ให้อัตโนมัติ)
+              </p>
             </div>
-            <p className="text-xs leading-relaxed text-slate-600">
-              เนื่องจากเซิร์ฟเวอร์ภายนอกไม่สามารถล็อกอินเข้าบัญชี MT5 ของโบรกเกอร์ XM โดยตรงได้หากไม่มีเทอร์มินัล MT5 รันอยู่ — หากต้องการราคาและสเปรดตรงกับ{' '}
-              <span className="font-mono font-semibold text-slate-800">US100Cash#</span> บน XM MT5 ของคุณ 100% สามารถดาวน์โหลด{' '}
-              <span className="font-mono font-medium text-slate-800">XM_MT5_LiveBridge_EA.mq5</span>{' '}
-              ไปติดบนกราฟ MT5 เพื่อส่งแท่ง M15 และราคา Bid เข้าเว็บทุก 2 วินาที (หากไม่ได้ติด ระบบจะใช้ฟีด Forex MT5 CFD แบบ Real-Time ให้อัตโนมัติ)
-            </p>
-          </div>
 
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <a
-              href="/api/mt5/bridge-ea"
-              download="XM_MT5_LiveBridge_EA.mq5"
-              className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-slate-900 px-4 text-xs font-semibold text-white whitespace-nowrap transition-colors hover:bg-slate-800"
-            >
-              <Download className="h-4 w-4" />
-              ดาวน์โหลด XM_MT5_LiveBridge_EA.mq5
-            </a>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <a
+                href="/api/mt5/bridge-ea"
+                download="XM_MT5_LiveBridge_EA.mq5"
+                className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-slate-900 px-4 text-xs font-semibold text-white whitespace-nowrap transition-colors hover:bg-slate-800"
+              >
+                <Download className="h-4 w-4" />
+                ดาวน์โหลด XM_MT5_LiveBridge_EA.mq5
+              </a>
 
-            <button
-              type="button"
-              onClick={() => {
-                const ingestUrl = `${window.location.origin}/api/mt5/ingest`;
-                void navigator.clipboard?.writeText(ingestUrl).catch(() => {});
-                setCopiedBridgeUrl(true);
-                window.setTimeout(() => setCopiedBridgeUrl(false), 1800);
-              }}
-              className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 whitespace-nowrap transition-colors hover:bg-slate-50"
-            >
-              {copiedBridgeUrl ? (
-                <>
-                  <Check className="h-3.5 w-3.5 text-emerald-600" />
-                  คัดลอก URL แล้ว
-                </>
-              ) : (
-                <>
-                  <Copy className="h-3.5 w-3.5" />
-                  คัดลอก WebRequest URL
-                </>
-              )}
-            </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const ingestUrl = `${window.location.origin}/api/mt5/ingest`;
+                  void navigator.clipboard?.writeText(ingestUrl).catch(() => {});
+                  setCopiedBridgeUrl(true);
+                  window.setTimeout(() => setCopiedBridgeUrl(false), 1800);
+                }}
+                className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 whitespace-nowrap transition-colors hover:bg-slate-50"
+              >
+                {copiedBridgeUrl ? (
+                  <>
+                    <Check className="h-3.5 w-3.5 text-emerald-600" />
+                    คัดลอก URL แล้ว
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3.5 w-3.5" />
+                    คัดลอก WebRequest URL
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </section>
   );
 };
