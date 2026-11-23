@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ArrowDownRight,
   ArrowUpRight,
+  Bell,
+  BellOff,
   ChevronRight,
   Minus,
   Radio,
@@ -17,6 +19,7 @@ import {
   CISD_TIMEFRAME_MAP,
   generateInitialCisdSeries,
 } from '../lib/m15CisdSimulator';
+import cisdLogoImg from '../assets/images/cisd_brand_logo_1795106433027.jpg';
 
 export interface TimeframeStatusItem {
   timeframe: CisdTimeframe;
@@ -182,7 +185,7 @@ export const MultiTimeframeStatusWindow: React.FC<
         overallLabel = 'ภาพรวมโน้มเอียงฝั่งลง';
         overallTone = 'down';
       } else if (upCount > 0 && downCount > 0) {
-        overallLabel = 'M15 & M5 ทิศทางสวนทางกัน';
+        overallLabel = 'M15 และ M5 ทิศทางสวนทางกัน';
         overallTone = 'mixed';
       } else {
         overallLabel = 'รอสัญญาณยืนยันทิศทาง';
@@ -210,91 +213,119 @@ export const MultiTimeframeStatusWindow: React.FC<
   };
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-5">
       {errorMsg && mode === 'live' && (
-        <div className="rounded-xl border border-rose-200/80 bg-rose-50/70 px-4 py-3 text-xs text-rose-800">
+        <div className="rounded-xl border border-rose-200/70 bg-rose-50/60 px-4 py-3.5 text-sm text-rose-800">
           {errorMsg}
         </div>
       )}
 
-      {/* Single Calm Status Card */}
-      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white">
+      {/* Soft Obsidian Brand Banner matching Cisd เตือน theme */}
+      <div className="rounded-2xl border border-slate-700/60 bg-gradient-to-r from-[#111726] via-[#151d30] to-[#1a2338] px-5 py-4 text-slate-100 shadow-xs sm:px-6 sm:py-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3.5">
+            <img
+              src={cisdLogoImg}
+              alt="โลโก้ Cisd เตือน"
+              referrerPolicy="no-referrer"
+              className="h-11 w-11 shrink-0 rounded-xl object-cover ring-1 ring-amber-300/30"
+            />
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-base font-semibold tracking-tight text-slate-100 sm:text-lg">
+                  Cisd เตือน · สรุปทิศทาง M15 และ M5
+                </h2>
+                <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-800/80 px-2.5 py-0.5 text-xs font-medium text-amber-200/90 ring-1 ring-amber-300/20">
+                  US100Cash#
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-slate-300/90">
+                มุมมองเปรียบเทียบแนวโน้ม M15 (เปิดแจ้งเตือน) และ M5 (ดูกราฟอย่างเดียว) แบบสบายตา
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs font-medium text-slate-300/90 sm:text-sm">
+            {lastUpdated && (
+              <span className="rounded-lg bg-slate-900/60 px-3 py-1.5 font-mono tabular-nums ring-1 ring-white/10">
+                อัปเดต {lastUpdated}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Low-Contrast Status Container */}
+      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-[#f9fafc]">
         {/* Top Controls Row */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/50 px-4 py-3.5 sm:px-6">
-          <div className="flex items-center gap-1 rounded-lg bg-slate-200/70 p-1">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/70 bg-slate-100/60 px-5 py-4 sm:px-6">
+          <div className="flex items-center gap-1.5 rounded-xl bg-slate-200/65 p-1">
             <button
               type="button"
               onClick={() => setMode('live')}
-              className={`inline-flex h-9 items-center gap-1.5 rounded-md px-3.5 text-[13px] font-medium whitespace-nowrap shrink-0 transition-colors ${
+              className={`inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-medium whitespace-nowrap shrink-0 transition-colors ${
                 mode === 'live'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-[#fcfdfe] text-slate-800 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-800'
               }`}
             >
-              <Radio className="h-3.5 w-3.5 text-emerald-600" />
+              <Radio className="h-4 w-4 text-emerald-600/90" />
               กราฟจริง
             </button>
             <button
               type="button"
               onClick={() => setMode('sim')}
-              className={`h-9 rounded-md px-3.5 text-[13px] font-medium whitespace-nowrap shrink-0 transition-colors ${
+              className={`h-10 rounded-lg px-4 text-sm font-medium whitespace-nowrap shrink-0 transition-colors ${
                 mode === 'sim'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-[#fcfdfe] text-slate-800 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-800'
               }`}
             >
               จำลอง
             </button>
           </div>
 
-          <div className="flex items-center gap-3">
-            {lastUpdated && (
-              <span className="font-mono text-xs text-slate-400 tabular-nums whitespace-nowrap">
-                อัปเดต {lastUpdated}
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={handleRefresh}
-              disabled={isLoading}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200/90 bg-white px-3 text-xs font-medium text-slate-700 whitespace-nowrap shrink-0 transition-colors hover:bg-slate-50 disabled:opacity-50"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-              รีเฟรช
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200/80 bg-[#fcfdfe] px-4 text-sm font-medium text-slate-700 whitespace-nowrap shrink-0 transition-colors hover:bg-slate-100/80 disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 text-slate-500 ${isLoading ? 'animate-spin' : ''}`} />
+            รีเฟรชข้อมูล
+          </button>
         </div>
 
-        {/* Calm Overall Summary Strip */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-5 py-4 sm:px-6">
-          <div className="flex items-center gap-2.5">
+        {/* Soft Overall Summary Strip */}
+        <div className="flex flex-col gap-3 border-b border-slate-200/70 bg-[#fcfdfe] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="flex items-center gap-3.5">
             <span
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
                 summary.overallTone === 'up'
-                  ? 'bg-emerald-100/80 text-emerald-700'
+                  ? 'bg-emerald-100/65 text-emerald-700/90'
                   : summary.overallTone === 'down'
-                  ? 'bg-rose-100/80 text-rose-700'
-                  : 'bg-slate-100 text-slate-600'
+                  ? 'bg-rose-100/65 text-rose-700/90'
+                  : 'bg-slate-200/65 text-slate-600'
               }`}
             >
               {summary.overallTone === 'up' ? (
-                <ArrowUpRight className="h-4 w-4" />
+                <ArrowUpRight className="h-5 w-5" />
               ) : summary.overallTone === 'down' ? (
-                <ArrowDownRight className="h-4 w-4" />
+                <ArrowDownRight className="h-5 w-5" />
               ) : (
-                <Minus className="h-4 w-4" />
+                <Minus className="h-5 w-5" />
               )}
             </span>
             <div>
-              <p className="text-[11px] font-medium text-slate-400">
+              <p className="text-xs font-medium text-slate-500 sm:text-sm">
                 ภาพรวม CISD (M15 · M5)
               </p>
               <p
-                className={`text-sm font-semibold ${
+                className={`mt-0.5 text-base font-semibold sm:text-lg ${
                   summary.overallTone === 'up'
-                    ? 'text-emerald-800'
+                    ? 'text-emerald-800/90'
                     : summary.overallTone === 'down'
-                    ? 'text-rose-800'
+                    ? 'text-rose-800/90'
                     : 'text-slate-700'
                 }`}
               >
@@ -303,165 +334,162 @@ export const MultiTimeframeStatusWindow: React.FC<
             </div>
           </div>
 
-          <div className="inline-flex items-center gap-3 text-xs font-semibold tabular-nums whitespace-nowrap">
-            <span className="text-emerald-700">ขาขึ้น {summary.upCount}</span>
+          <div className="inline-flex items-center gap-3.5 self-start rounded-xl border border-slate-200/70 bg-slate-100/60 px-4 py-2 text-sm font-semibold tabular-nums whitespace-nowrap sm:self-auto">
+            <span className="text-emerald-700/90">ขาขึ้น {summary.upCount}</span>
             <span aria-hidden="true" className="text-slate-300">
-              ·
+              |
             </span>
-            <span className="text-rose-700">ขาลง {summary.downCount}</span>
+            <span className="text-rose-700/90">ขาลง {summary.downCount}</span>
           </div>
         </div>
 
-        {/* Mobile & Tablet (< lg): Spacious, Calm Full-Width Rows */}
-        <div className="divide-y divide-slate-100 lg:hidden">
+        {/* Timeframe Cards (Responsive 1-col mobile -> 2-col desktop, soft pastel/slate palette + larger readable text) */}
+        <div className="grid grid-cols-1 gap-4 p-4 sm:p-6 md:grid-cols-2">
           {ALL_CISD_CHART_TIMEFRAMES.map((tf) => {
             const item = items.find((i) => i.timeframe === tf);
             const meta = CISD_TIMEFRAME_MAP[tf];
             const isUp = item?.status === 'UP';
             const isDown = item?.status === 'DOWN';
+            const isSilentTf = tf === 'M5';
+
+            const activeCisdWatch = isUp
+              ? item?.latestBearCisdLevel
+              : isDown
+              ? item?.latestBullCisdLevel
+              : item?.latestBullCisdLevel ?? item?.latestBearCisdLevel;
+
+            const activeWatchLabel = isUp
+              ? 'แนว CISD กลับตัวลง'
+              : isDown
+              ? 'แนว CISD กลับตัวขึ้น'
+              : 'ระดับ CISD เฝ้าดู';
 
             return (
               <button
-                key={`row-${tf}`}
+                key={`status-card-${tf}`}
                 type="button"
                 onClick={() => onSelectTimeframeForChart(tf)}
-                className={`flex min-h-[72px] w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors focus-visible:outline-2 focus-visible:outline-blue-600 ${
+                className={`group flex flex-col justify-between rounded-2xl border p-5 sm:p-6 text-left transition-colors focus-visible:outline-2 focus-visible:outline-blue-600 ${
                   isUp
-                    ? 'bg-emerald-50/40 hover:bg-emerald-50/75'
+                    ? 'border-emerald-200/75 bg-emerald-50/45 hover:bg-emerald-50/75'
                     : isDown
-                    ? 'bg-rose-50/40 hover:bg-rose-50/75'
-                    : 'bg-white hover:bg-slate-50'
+                    ? 'border-rose-200/75 bg-rose-50/45 hover:bg-rose-50/75'
+                    : 'border-slate-200/80 bg-[#fcfdfe] hover:bg-slate-100/70'
                 }`}
               >
-                <div className="flex items-center gap-3.5 min-w-0">
-                  {isLoading && !item ? (
-                    <span className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-slate-200/80" />
-                  ) : isUp ? (
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-100/90 text-emerald-700">
-                      <ArrowUpRight className="h-5 w-5" />
-                    </span>
-                  ) : isDown ? (
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-rose-100/90 text-rose-700">
-                      <ArrowDownRight className="h-5 w-5" />
-                    </span>
-                  ) : (
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-                      <Minus className="h-5 w-5" />
-                    </span>
-                  )}
+                {/* Top Row: Timeframe + Alert Mode Badge */}
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <span className="font-mono text-xl font-bold tracking-tight text-slate-800 sm:text-2xl">
+                        {tf}
+                      </span>
+                      <span className="rounded-lg bg-slate-200/60 px-2.5 py-0.5 text-xs font-medium text-slate-600 sm:text-sm">
+                        {meta.thName}
+                      </span>
+                    </div>
 
-                  <div className="min-w-0">
-                    <span className="block font-mono text-base font-bold tracking-tight text-slate-900">
-                      {tf}
-                    </span>
-                    <span className="mt-0.5 block text-[13px] text-slate-500 truncate">
-                      {meta.thName} · {tf === 'M5' ? 'ไม่แจ้งเตือน' : 'แจ้งเตือน'}
-                    </span>
+                    <div className="mt-2 inline-flex items-center gap-1.5 text-sm text-slate-600">
+                      {isSilentTf ? (
+                        <>
+                          <BellOff className="h-4 w-4 text-slate-500" />
+                          <span>ดูกราฟอย่างเดียว (ไม่แจ้งเตือน)</span>
+                        </>
+                      ) : (
+                        <>
+                          <Bell className="h-4 w-4 text-amber-600/90" />
+                          <span>เปิดแจ้งเตือน Telegram & มือถือ</span>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-2.5 shrink-0">
-                  <span
-                    className={`text-[15px] font-semibold whitespace-nowrap ${
-                      isLoading && !item
-                        ? 'text-slate-400'
-                        : isUp
-                        ? 'text-emerald-800'
-                        : isDown
-                        ? 'text-rose-800'
-                        : 'text-slate-500'
-                    }`}
-                  >
-                    {isLoading && !item
-                      ? 'กำลังโหลด...'
-                      : isUp
-                      ? 'ขาขึ้น'
-                      : isDown
-                      ? 'ขาลง'
-                      : 'รอสัญญาณ'}
-                  </span>
-                  <ChevronRight className="h-4 w-4 text-slate-300" />
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Desktop (lg+): Clean 2-Column M15 & M5 Tiles */}
-        <div className="hidden lg:grid lg:grid-cols-2 lg:gap-4 lg:p-6">
-          {ALL_CISD_CHART_TIMEFRAMES.map((tf) => {
-            const item = items.find((i) => i.timeframe === tf);
-            const meta = CISD_TIMEFRAME_MAP[tf];
-            const isUp = item?.status === 'UP';
-            const isDown = item?.status === 'DOWN';
-
-            return (
-              <button
-                key={`tile-${tf}`}
-                type="button"
-                onClick={() => onSelectTimeframeForChart(tf)}
-                className={`group flex flex-col items-center justify-between rounded-2xl border px-4 py-6 text-center transition-colors focus-visible:outline-2 focus-visible:outline-blue-600 ${
-                  isUp
-                    ? 'border-emerald-200/70 bg-emerald-50/45 hover:bg-emerald-50/80'
-                    : isDown
-                    ? 'border-rose-200/70 bg-rose-50/45 hover:bg-rose-50/80'
-                    : 'border-slate-200/80 bg-slate-50/60 hover:bg-slate-100/70'
-                }`}
-              >
-                <div>
-                  <span className="block font-mono text-lg font-bold tracking-tight text-slate-900">
-                    {tf}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-slate-500">
-                    {meta.thName} · {tf === 'M5' ? 'ไม่แจ้งเตือน' : 'แจ้งเตือน'}
-                  </span>
-                </div>
-
-                <div className="my-5 flex items-center justify-center">
+                  {/* Soft Circular Direction Icon */}
                   {isLoading && !item ? (
-                    <span className="h-12 w-12 animate-pulse rounded-full bg-slate-200/80" />
+                    <span className="h-12 w-12 shrink-0 animate-pulse rounded-2xl bg-slate-200/70" />
                   ) : isUp ? (
-                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100/90 text-emerald-700 transition-transform group-hover:scale-105">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100/75 text-emerald-700/90 transition-transform group-hover:scale-105">
                       <ArrowUpRight className="h-6 w-6" />
                     </span>
                   ) : isDown ? (
-                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100/90 text-rose-700 transition-transform group-hover:scale-105">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-100/75 text-rose-700/90 transition-transform group-hover:scale-105">
                       <ArrowDownRight className="h-6 w-6" />
                     </span>
                   ) : (
-                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-200/80 text-slate-500">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-200/70 text-slate-500">
                       <Minus className="h-6 w-6" />
                     </span>
                   )}
                 </div>
 
-                <span
-                  className={`text-[15px] font-semibold whitespace-nowrap ${
-                    isLoading && !item
-                      ? 'text-slate-400'
-                      : isUp
-                      ? 'text-emerald-800'
-                      : isDown
-                      ? 'text-rose-800'
-                      : 'text-slate-500'
-                  }`}
-                >
-                  {isLoading && !item
-                    ? 'กำลังโหลด...'
-                    : isUp
-                    ? 'ขาขึ้น'
-                    : isDown
-                    ? 'ขาลง'
-                    : 'รอสัญญาณ'}
-                </span>
+                {/* Middle Row: Large Readable Trend Status + Live Price */}
+                <div className="my-5 flex flex-wrap items-baseline justify-between gap-3 rounded-xl border border-slate-200/60 bg-white/75 px-4 py-3.5">
+                  <div>
+                    <p className="text-xs font-medium text-slate-500 sm:text-sm">
+                      ทิศทางล่าสุด
+                    </p>
+                    <p
+                      className={`mt-0.5 text-lg font-bold tracking-tight sm:text-xl ${
+                        isLoading && !item
+                          ? 'text-slate-400'
+                          : isUp
+                          ? 'text-emerald-700/95'
+                          : isDown
+                          ? 'text-rose-700/95'
+                          : 'text-slate-600'
+                      }`}
+                    >
+                      {isLoading && !item
+                        ? 'กำลังโหลด...'
+                        : isUp
+                        ? 'ขาขึ้น (BUY)'
+                        : isDown
+                        ? 'ขาลง (SELL)'
+                        : 'รอสัญญาณ'}
+                    </p>
+                  </div>
+
+                  <div className="text-right">
+                    <p className="text-xs font-medium text-slate-500 sm:text-sm">
+                      ราคาปัจจุบัน
+                    </p>
+                    <p className="mt-0.5 font-mono text-base font-semibold text-slate-800 tabular-nums sm:text-lg">
+                      {item && item.currentPrice > 0
+                        ? item.currentPrice.toFixed(spec.digits)
+                        : '—'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Bottom Row: CISD Watch Level + Open Chart Prompt */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-sm text-slate-600">
+                  <span className="font-medium">
+                    {activeCisdWatch !== null && activeCisdWatch !== undefined ? (
+                      <>
+                        {activeWatchLabel}:{' '}
+                        <span className="font-mono font-semibold text-slate-700 tabular-nums">
+                          {activeCisdWatch.toFixed(spec.digits)}
+                        </span>
+                      </>
+                    ) : (
+                      'รอสร้างแนวโครงสร้าง CISD ใหม่'
+                    )}
+                  </span>
+
+                  <span className="inline-flex items-center gap-1 font-medium text-slate-700 group-hover:text-slate-900">
+                    เปิดกราฟ {tf}
+                    <ChevronRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </div>
               </button>
             );
           })}
         </div>
 
-        {/* Quiet Single-Line Hint */}
-        <div className="border-t border-slate-100 bg-slate-50/40 px-5 py-3 text-center text-xs text-slate-400 sm:text-left">
-          แตะที่ Timeframe เพื่อเปิดดูกราฟแท่งเทียน
+        {/* Calm Footer Hint */}
+        <div className="border-t border-slate-200/70 bg-slate-100/50 px-5 py-3.5 text-center text-sm text-slate-600 sm:px-6 sm:text-left">
+          แตะที่การ์ด <span className="font-semibold text-slate-700">M15</span> หรือ{' '}
+          <span className="font-semibold text-slate-700">M5</span> เพื่อเปิดดูกราฟแท่งเทียนแบบละเอียดได้ทันที
         </div>
       </div>
     </section>
