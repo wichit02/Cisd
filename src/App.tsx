@@ -372,53 +372,33 @@ export default function App() {
           </div>
         )}
 
-        {/* Clean Minimal Title + Web Mode Chart Switcher */}
+        {/* Clean Minimal Title (Studio/Preview mode only) + Web Mode Chart Switcher */}
         <div
           className={`${
             isWebMode ? 'mb-5' : 'mb-7'
           } flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between`}
         >
-          <div>
-            {isWebMode && (
-              <div className="mb-2 inline-flex items-center gap-2">
-                <img
-                  src={cisdLogoImg}
-                  alt="โลโก้ Cisd เตือน"
-                  referrerPolicy="no-referrer"
-                  className="h-7 w-7 rounded-lg object-cover ring-1 ring-slate-900/15 shadow-xs"
-                />
-                <span className="text-sm font-bold tracking-tight text-slate-900">
-                  Cisd เตือน
-                </span>
-              </div>
-            )}
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl text-balance">
-              {activeSection === 'm5'
-                ? 'Cisd เตือน · กราฟ M5 (ไม่แจ้งเตือน)'
-                : activeSection === 'mtf'
-                ? 'สรุปสถานะ Cisd เตือน (M15 · M5)'
-                : activeSection === 'telegram'
-                ? 'เชื่อมต่อ Telegram แจ้งเตือน Cisd เตือน'
-                : `Cisd เตือน · Timeframe ${cisdTimeframe}`}
-            </h1>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-600">
-              {isWebMode
-                ? activeSection === 'm5'
-                  ? 'MetaTrader 5 · US100 M5 · ดูกราฟ Real-Time (ปิดแจ้งเตือน)'
+          {!isWebMode && (
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl text-balance">
+                {activeSection === 'm5'
+                  ? 'Cisd เตือน · กราฟ M5 (ไม่แจ้งเตือน)'
                   : activeSection === 'mtf'
-                  ? 'CISD · US100 · M15 · M5'
+                  ? 'สรุปสถานะ Cisd เตือน (M15 · M5)'
                   : activeSection === 'telegram'
-                  ? 'ใช้ Bot Token และ Chat ID เดิมบนเซิร์ฟเวอร์ พร้อมทดสอบส่งข้อความและเช็กประวัติแจ้งเตือน'
-                  : `MetaTrader 5 · US100 ${cisdTimeframe} · CISD (ขาขึ้น / ขาลง)`
-                : SECTION_DESCRIPTIONS[activeSection]}
-            </p>
-          </div>
+                  ? 'เชื่อมต่อ Telegram แจ้งเตือน Cisd เตือน'
+                  : `Cisd เตือน · Timeframe ${cisdTimeframe}`}
+              </h1>
+              <p className="mt-1.5 text-[13px] leading-relaxed text-slate-600">
+                {SECTION_DESCRIPTIONS[activeSection]}
+              </p>
+            </div>
+          )}
 
           {isWebMode &&
             (activeSection === 'm15' ||
               activeSection === 'm5' ||
-              activeSection === 'mtf' ||
-              activeSection === 'telegram') && (
+              activeSection === 'mtf') && (
             <div className="inline-flex flex-wrap items-center gap-1 self-start rounded-lg bg-slate-200/75 p-1">
               <button
                 type="button"
@@ -452,22 +432,6 @@ export default function App() {
                 }`}
               >
                 สถานะ M15/M5
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveSection('telegram')}
-                className={`inline-flex h-9 items-center gap-1.5 rounded-md px-3 text-[13px] font-medium whitespace-nowrap transition-colors ${
-                  activeSection === 'telegram'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <span
-                  className={`h-2 w-2 rounded-full ${
-                    telegramSyncedReady ? 'bg-emerald-500' : 'bg-amber-500'
-                  }`}
-                />
-                เชื่อมต่อ Telegram
               </button>
             </div>
           )}

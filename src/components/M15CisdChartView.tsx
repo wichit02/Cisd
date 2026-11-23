@@ -1064,59 +1064,61 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
 
   return (
     <section className="space-y-6">
-      {/* Compact Visual Brand Card: New Cisd เตือน Logo & M15 Breakout Artwork */}
-      <div className="relative overflow-hidden rounded-2xl border border-slate-800/80 bg-[#090d16] text-white shadow-sm">
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-full sm:w-3/5 opacity-75">
-          <img
-            src={cisdBannerImg}
-            alt="Cisd เตือน กราฟ US100 M15 Real-Time"
-            referrerPolicy="no-referrer"
-            className="h-full w-full object-cover object-center"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#090d16] via-[#090d16]/85 to-transparent" />
-        </div>
-        <div className="relative z-10 flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4">
-          <div className="flex items-center gap-3.5">
+      {/* Compact Visual Brand Card (Studio/Preview mode only; hidden on deployed live web) */}
+      {!isWebMode && (
+        <div className="relative overflow-hidden rounded-2xl border border-slate-800/80 bg-[#090d16] text-white shadow-sm">
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-full sm:w-3/5 opacity-75">
             <img
-              src={cisdLogoImg}
-              alt="โลโก้ Cisd เตือน"
+              src={cisdBannerImg}
+              alt="Cisd เตือน กราฟ US100 M15 Real-Time"
               referrerPolicy="no-referrer"
-              className="h-12 w-12 shrink-0 rounded-xl object-cover ring-1 ring-amber-400/35 shadow-md"
+              className="h-full w-full object-cover object-center"
             />
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold tracking-tight text-white sm:text-lg">
-                  {alertsDisabled ? `Cisd เตือน · กราฟ ${activeTimeframe}` : 'Cisd เตือน'}
-                </h2>
-                <span
-                  className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold ring-1 ${
-                    alertsDisabled
-                      ? 'bg-sky-500/15 text-sky-300 ring-sky-400/25'
-                      : 'bg-emerald-500/15 text-emerald-300 ring-emerald-400/25'
-                  }`}
-                >
+            <div className="absolute inset-0 bg-gradient-to-r from-[#090d16] via-[#090d16]/85 to-transparent" />
+          </div>
+          <div className="relative z-10 flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4">
+            <div className="flex items-center gap-3.5">
+              <img
+                src={cisdLogoImg}
+                alt="โลโก้ Cisd เตือน"
+                referrerPolicy="no-referrer"
+                className="h-12 w-12 shrink-0 rounded-xl object-cover ring-1 ring-amber-400/35 shadow-md"
+              />
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-bold tracking-tight text-white sm:text-lg">
+                    {alertsDisabled ? `Cisd เตือน · กราฟ ${activeTimeframe}` : 'Cisd เตือน'}
+                  </h2>
                   <span
-                    className={`h-1.5 w-1.5 rounded-full animate-pulse ${
-                      alertsDisabled ? 'bg-sky-400' : 'bg-emerald-400'
+                    className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold ring-1 ${
+                      alertsDisabled
+                        ? 'bg-sky-500/15 text-sky-300 ring-sky-400/25'
+                        : 'bg-emerald-500/15 text-emerald-300 ring-emerald-400/25'
                     }`}
-                  />
-                  {alertsDisabled ? `${activeTimeframe} ดูกราฟ (ไม่แจ้งเตือน)` : 'M15 LIVE'}
-                </span>
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full animate-pulse ${
+                        alertsDisabled ? 'bg-sky-400' : 'bg-emerald-400'
+                      }`}
+                    />
+                    {alertsDisabled ? `${activeTimeframe} ดูกราฟ (ไม่แจ้งเตือน)` : 'M15 LIVE'}
+                  </span>
+                </div>
+                <p className="mt-0.5 text-xs text-slate-300">
+                  {alertsDisabled
+                    ? `อัปเดตกราฟ US100 ${activeTimeframe} แบบ Real-Time ทุก 2 วินาที (ปิดการแจ้งเตือนเฉพาะหน้านี้)`
+                    : 'สแกนโครงสร้าง US100 M15 ทุก 2 วินาที · ส่งแจ้งเตือน Telegram (8217822307) & มือถือ'}
+                </p>
               </div>
-              <p className="mt-0.5 text-xs text-slate-300">
-                {alertsDisabled
-                  ? `อัปเดตกราฟ US100 ${activeTimeframe} แบบ Real-Time ทุก 2 วินาที (ปิดการแจ้งเตือนเฉพาะหน้านี้)`
-                  : 'สแกนโครงสร้าง US100 M15 ทุก 2 วินาที · ส่งแจ้งเตือน Telegram (8217822307) & มือถือ'}
-              </p>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-amber-200/90 font-mono tabular-nums">
+              <span className="rounded-lg bg-slate-900/80 px-2.5 py-1.5 ring-1 ring-white/10">
+                US100Cash# · {activeTimeframe}
+              </span>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-xs text-amber-200/90 font-mono tabular-nums">
-            <span className="rounded-lg bg-slate-900/80 px-2.5 py-1.5 ring-1 ring-white/10">
-              US100Cash# · {activeTimeframe}
-            </span>
-          </div>
         </div>
-      </div>
+      )}
 
       {/* Control Toolbar */}
       <div className="flex flex-col gap-3.5 rounded-xl border border-slate-200/90 bg-white p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
@@ -1171,182 +1173,186 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {!alertsDisabled && (
-            <select
-              aria-label="ทิศทางแจ้งเตือน CISD"
-              value={directionFilter}
-              onChange={(e) => void handleDirectionChange(e.target.value as AlertDirection)}
-              className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-[13px] font-medium text-slate-700 focus:border-blue-600 focus:outline-none"
-            >
-              <option value="both">เตือนทั้งขาขึ้น & ขาลง</option>
-              <option value="sell_only">เฉพาะปิดต่ำกว่า CISD (SELL)</option>
-              <option value="buy_only">เฉพาะปิดเหนือ CISD (BUY)</option>
-            </select>
-          )}
-
-          {feedMode === 'live' ? (
-            <button
-              type="button"
-              onClick={() =>
-                void fetchLiveCisdBars(symbol, activeTimeframe, {
-                  updateChart: true,
-                  fresh: true,
-                })
-              }
-              disabled={isLoadingLive}
-              className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 text-[13px] font-medium text-slate-700 whitespace-nowrap shrink-0 transition-colors hover:bg-slate-50 disabled:opacity-50"
-            >
-              <RefreshCw
-                className={`h-3.5 w-3.5 ${isLoadingLive ? 'animate-spin' : ''}`}
-              />
-              รีเฟรชกราฟจริง
-            </button>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => advanceBar('BUY')}
-                className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 text-[13px] font-medium text-white whitespace-nowrap shrink-0 transition-colors hover:bg-emerald-700"
+        {(!isWebMode || feedMode === 'sim' || (!alertsDisabled && soundSecondsLeft > 0)) && (
+          <div className="flex flex-wrap items-center gap-2">
+            {!alertsDisabled && !isWebMode && (
+              <select
+                aria-label="ทิศทางแจ้งเตือน CISD"
+                value={directionFilter}
+                onChange={(e) => void handleDirectionChange(e.target.value as AlertDirection)}
+                className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-[13px] font-medium text-slate-700 focus:border-blue-600 focus:outline-none"
               >
-                <ArrowUpRight className="h-4 w-4" />
-                ทดสอบปิดเหนือ CISD
-              </button>
+                <option value="both">เตือนทั้งขาขึ้น & ขาลง</option>
+                <option value="sell_only">เฉพาะปิดต่ำกว่า CISD (SELL)</option>
+                <option value="buy_only">เฉพาะปิดเหนือ CISD (BUY)</option>
+              </select>
+            )}
 
-              <button
-                type="button"
-                onClick={() => advanceBar('SELL')}
-                className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-amber-500 px-3.5 text-[13px] font-medium text-slate-950 whitespace-nowrap shrink-0 transition-colors hover:bg-amber-400"
-              >
-                <ArrowDownRight className="h-4 w-4" />
-                ทดสอบปิดต่ำกว่า CISD
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  unlockAudioAlert();
-                  setIsPlaying((p) => !p);
-                }}
-                className={`inline-flex h-10 items-center gap-1.5 rounded-lg px-3.5 text-[13px] font-medium whitespace-nowrap shrink-0 transition-colors ${
-                  isPlaying
-                    ? 'bg-slate-900 text-white hover:bg-slate-800'
-                    : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-                {isPlaying ? 'หยุด' : 'เล่น'}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  unlockAudioAlert();
-                  advanceBar();
-                }}
-                aria-label={`แท่งถัดไป ${activeTimeframe}`}
-                className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 text-[13px] font-medium text-slate-700 whitespace-nowrap shrink-0 transition-colors hover:bg-slate-50"
-              >
-                <SkipForward className="h-3.5 w-3.5" />
-                ถัดไป
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setIsPlaying(false);
-                  simPlanRef.current = null;
-                  setSimTickStep(0);
-                  stopAudioAndTimer();
-                  setSeriesState(generateInitialCisdSeries(symbol, activeTimeframe));
-                }}
-                aria-label={`รีเซ็ตกราฟ ${activeTimeframe}`}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-800"
-              >
-                <RotateCcw className="h-4 w-4" />
-              </button>
-            </>
-          )}
-
-          {!alertsDisabled && (
-            <>
-              <button
-                type="button"
-                onClick={() => {
-                  unlockAudioAlert();
-                  if (soundEnabled) stopAudioAndTimer();
-                  setSoundEnabled((s) => !s);
-                }}
-                aria-label="สลับเสียงเตือน 10 วินาที"
-                className={`inline-flex h-10 items-center gap-1.5 rounded-lg border px-3.5 text-[13px] font-medium whitespace-nowrap shrink-0 transition-colors ${
-                  soundEnabled
-                    ? 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                    : 'border-slate-200 bg-slate-100 text-slate-500'
-                }`}
-              >
-                {soundEnabled ? (
-                  <Volume2 className="h-4 w-4 text-blue-600" />
-                ) : (
-                  <VolumeX className="h-4 w-4" />
-                )}
-                เสียง 10 วิ
-              </button>
-
-              <button
-                type="button"
-                onClick={handleTestSound}
-                aria-label="ทดสอบเสียงเตือน"
-                className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50/70 px-3.5 text-[13px] font-medium text-blue-700 whitespace-nowrap shrink-0 transition-colors hover:bg-blue-100"
-              >
-                <Bell className="h-3.5 w-3.5" />
-                ทดสอบเสียง
-              </button>
-
-              <button
-                type="button"
-                onClick={() => void handleEnableMobileNotify()}
-                disabled={mobileNotifyBusy}
-                aria-label="เปิดแจ้งเตือนเข้ามือถือ"
-                className={`inline-flex h-10 items-center gap-1.5 rounded-lg border px-3.5 text-[13px] font-medium whitespace-nowrap shrink-0 transition-colors disabled:opacity-60 ${
-                  mobileNotifyReady
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                <Smartphone className="h-3.5 w-3.5" />
-                {mobileNotifyReady ? 'แจ้งเตือนมือถือ (เปิด)' : 'แจ้งเตือนเข้ามือถือ'}
-              </button>
-
-              <button
-                type="button"
-                onClick={onGoToTelegram}
-                aria-label="เปิดหน้าเชื่อมต่อ Telegram"
-                className={`inline-flex h-10 items-center gap-1.5 rounded-lg border px-3.5 text-[13px] font-medium whitespace-nowrap shrink-0 transition-colors ${
-                  telegramSyncedReady
-                    ? 'border-sky-200 bg-sky-50 text-sky-800 hover:bg-sky-100'
-                    : 'border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100'
-                }`}
-              >
-                <Send className="h-3.5 w-3.5" />
-                {telegramSyncedReady ? 'Telegram (เชื่อมต่อแล้ว)' : 'เชื่อมต่อ Telegram'}
-              </button>
-
-              {soundSecondsLeft > 0 && (
+            {feedMode === 'live' ? (
+              !isWebMode && (
                 <button
                   type="button"
-                  onClick={stopAudioAndTimer}
-                  className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-amber-600 px-3.5 text-[13px] font-medium text-white whitespace-nowrap shrink-0 transition-colors hover:bg-amber-700"
+                  onClick={() =>
+                    void fetchLiveCisdBars(symbol, activeTimeframe, {
+                      updateChart: true,
+                      fresh: true,
+                    })
+                  }
+                  disabled={isLoadingLive}
+                  className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 text-[13px] font-medium text-slate-700 whitespace-nowrap shrink-0 transition-colors hover:bg-slate-50 disabled:opacity-50"
                 >
-                  <Square className="h-3.5 w-3.5" />
-                  หยุด ({soundSecondsLeft}s)
+                  <RefreshCw
+                    className={`h-3.5 w-3.5 ${isLoadingLive ? 'animate-spin' : ''}`}
+                  />
+                  รีเฟรชกราฟจริง
                 </button>
-              )}
-            </>
-          )}
-        </div>
+              )
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => advanceBar('BUY')}
+                  className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 text-[13px] font-medium text-white whitespace-nowrap shrink-0 transition-colors hover:bg-emerald-700"
+                >
+                  <ArrowUpRight className="h-4 w-4" />
+                  ทดสอบปิดเหนือ CISD
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => advanceBar('SELL')}
+                  className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-amber-500 px-3.5 text-[13px] font-medium text-slate-950 whitespace-nowrap shrink-0 transition-colors hover:bg-amber-400"
+                >
+                  <ArrowDownRight className="h-4 w-4" />
+                  ทดสอบปิดต่ำกว่า CISD
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    unlockAudioAlert();
+                    setIsPlaying((p) => !p);
+                  }}
+                  className={`inline-flex h-10 items-center gap-1.5 rounded-lg px-3.5 text-[13px] font-medium whitespace-nowrap shrink-0 transition-colors ${
+                    isPlaying
+                      ? 'bg-slate-900 text-white hover:bg-slate-800'
+                      : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                  {isPlaying ? 'หยุด' : 'เล่น'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    unlockAudioAlert();
+                    advanceBar();
+                  }}
+                  aria-label={`แท่งถัดไป ${activeTimeframe}`}
+                  className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 text-[13px] font-medium text-slate-700 whitespace-nowrap shrink-0 transition-colors hover:bg-slate-50"
+                >
+                  <SkipForward className="h-3.5 w-3.5" />
+                  ถัดไป
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPlaying(false);
+                    simPlanRef.current = null;
+                    setSimTickStep(0);
+                    stopAudioAndTimer();
+                    setSeriesState(generateInitialCisdSeries(symbol, activeTimeframe));
+                  }}
+                  aria-label={`รีเซ็ตกราฟ ${activeTimeframe}`}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-800"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </button>
+              </>
+            )}
+
+            {!alertsDisabled && !isWebMode && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    unlockAudioAlert();
+                    if (soundEnabled) stopAudioAndTimer();
+                    setSoundEnabled((s) => !s);
+                  }}
+                  aria-label="สลับเสียงเตือน 10 วินาที"
+                  className={`inline-flex h-10 items-center gap-1.5 rounded-lg border px-3.5 text-[13px] font-medium whitespace-nowrap shrink-0 transition-colors ${
+                    soundEnabled
+                      ? 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                      : 'border-slate-200 bg-slate-100 text-slate-500'
+                  }`}
+                >
+                  {soundEnabled ? (
+                    <Volume2 className="h-4 w-4 text-blue-600" />
+                  ) : (
+                    <VolumeX className="h-4 w-4" />
+                  )}
+                  เสียง 10 วิ
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleTestSound}
+                  aria-label="ทดสอบเสียงเตือน"
+                  className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50/70 px-3.5 text-[13px] font-medium text-blue-700 whitespace-nowrap shrink-0 transition-colors hover:bg-blue-100"
+                >
+                  <Bell className="h-3.5 w-3.5" />
+                  ทดสอบเสียง
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => void handleEnableMobileNotify()}
+                  disabled={mobileNotifyBusy}
+                  aria-label="เปิดแจ้งเตือนเข้ามือถือ"
+                  className={`inline-flex h-10 items-center gap-1.5 rounded-lg border px-3.5 text-[13px] font-medium whitespace-nowrap shrink-0 transition-colors disabled:opacity-60 ${
+                    mobileNotifyReady
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                      : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <Smartphone className="h-3.5 w-3.5" />
+                  {mobileNotifyReady ? 'แจ้งเตือนมือถือ (เปิด)' : 'แจ้งเตือนเข้ามือถือ'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onGoToTelegram}
+                  aria-label="เปิดหน้าเชื่อมต่อ Telegram"
+                  className={`inline-flex h-10 items-center gap-1.5 rounded-lg border px-3.5 text-[13px] font-medium whitespace-nowrap shrink-0 transition-colors ${
+                    telegramSyncedReady
+                      ? 'border-sky-200 bg-sky-50 text-sky-800 hover:bg-sky-100'
+                      : 'border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100'
+                  }`}
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  {telegramSyncedReady ? 'Telegram (เชื่อมต่อแล้ว)' : 'เชื่อมต่อ Telegram'}
+                </button>
+              </>
+            )}
+
+            {!alertsDisabled && soundSecondsLeft > 0 && (
+              <button
+                type="button"
+                onClick={stopAudioAndTimer}
+                className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-amber-600 px-3.5 text-[13px] font-medium text-white whitespace-nowrap shrink-0 transition-colors hover:bg-amber-700"
+              >
+                <Square className="h-3.5 w-3.5" />
+                หยุด ({soundSecondsLeft}s)
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
-      {!alertsDisabled && telegramSyncedReady === false && (
+      {!alertsDisabled && !isWebMode && telegramSyncedReady === false && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
