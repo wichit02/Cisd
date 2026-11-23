@@ -216,6 +216,9 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
 
   const countdownRef = useRef<number | null>(null);
   const tickFlashTimerRef = useRef<number | null>(null);
+  const chartScrollRef = useRef<HTMLDivElement | null>(null);
+  const userPannedChartRef = useRef<boolean>(false);
+  const expectedAutoScrollRef = useRef<number | null>(null);
   const simPlanRef = useRef<{ open: number; targetClose: number; step: number } | null>(null);
   const simStepFnRef = useRef<() => void>(() => {});
   const alertedLiveBarsRef = useRef<Set<string>>(new Set());
@@ -1053,6 +1056,36 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
   const slotW = activeCandlesW / Math.max(1, visibleBars.length);
   const candleW = Math.max(3.0, Math.min(5.4, slotW * 0.6));
 
+  useEffect(() => {
+    userPannedChartRef.current = false;
+  }, [activeTimeframe, feedMode]);
+
+  useEffect(() => {
+    const container = chartScrollRef.current;
+    if (!container || userPannedChartRef.current || visibleBars.length === 0) return;
+
+    const rafId = window.requestAnimationFrame(() => {
+      const el = chartScrollRef.current;
+      if (!el || userPannedChartRef.current) return;
+      const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
+      if (maxScroll <= 0) {
+        expectedAutoScrollRef.current = null;
+        return;
+      }
+      const latestCandleSvgX =
+        plotLeft + 6 + Math.max(0, visibleBars.length - 1) * slotW + slotW / 2;
+      const latestCandlePx = (latestCandleSvgX / svgW) * el.scrollWidth;
+      const targetScroll = Math.max(
+        0,
+        Math.min(maxScroll, Math.round(latestCandlePx - el.clientWidth * 0.65))
+      );
+      expectedAutoScrollRef.current = targetScroll;
+      el.scrollLeft = targetScroll;
+    });
+
+    return () => window.cancelAnimationFrame(rafId);
+  }, [activeTimeframe, feedMode, isWebMode, visibleBars.length, plotLeft, slotW, svgW]);
+
   const priceToY = (p: number) => {
     const ratio =
       (chartMetrics.priceTop - p) / (chartMetrics.priceTop - chartMetrics.priceBottom);
@@ -1525,7 +1558,23 @@ export const M15CisdChartView: React.FC<M15CisdChartViewProps> = ({
           </div>
 
           {/* Interactive MT5 Candlestick SVG */}
-          <div className="relative w-full overflow-x-auto">
+          <div
+            ref={chartScrollRef}
+            onScroll={() => {
+              const el = chartScrollRef.current;
+              if (!el) return;
+              if (
+                expectedAutoScrollRef.current !== null &&
+                Math.abs(el.scrollLeft - expectedAutoScrollRef.current) <= 4
+              ) {
+                expectedAutoScrollRef.current = null;
+                return;
+              }
+              expectedAutoScrollRef.current = null;
+              userPannedChartRef.current = true;
+            }}
+            className="relative w-full overflow-x-auto"
+          >
             <svg
               viewBox={`0 0 ${svgW} ${totalH}`}
               className="h-auto w-full min-w-[600px] select-none"
