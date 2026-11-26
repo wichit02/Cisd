@@ -4,21 +4,9 @@
     "US100"
   ],
   "direction": "both",
-  "totalCapturedSignals": 2,
-  "latestSignalAt": "24/11/2569 03:15:02",
+  "totalCapturedSignals": 1,
+  "latestSignalAt": "19/11/2569 22:55:48",
   "events": [
-    {
-      "id": "M15-CISD-US100-2026-11-23T20:00:00.000Z-BUY",
-      "timestamp": "24/11/2569 03:15:02",
-      "symbol": "US100",
-      "signal": "BUY",
-      "aoPrev": 0,
-      "aoCurr": 0,
-      "price": 26782.4,
-      "deliveredToTelegram": true,
-      "deliveredToNtfy": false,
-      "deliveredWebPushCount": 0
-    },
     {
       "id": "sim-M15-US100-1795103748414",
       "timestamp": "19/11/2569 22:55:48",
